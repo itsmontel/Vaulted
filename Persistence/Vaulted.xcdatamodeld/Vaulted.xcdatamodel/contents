@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0"
+       lastSavedToolsVersion="21513" systemVersion="22E261" minimumToolsVersion="Automatic"
+       sourceLanguage="Swift" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
+
+    <entity name="DrawerEntity" representedClassName="DrawerEntity" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLocked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="requiresBiometric" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="systemKey" optional="YES" attributeType="String"/>
+        <relationship name="cards" optional="YES" toMany="YES" deletionRule="Cascade"
+                      destinationEntity="CardEntity" inverseName="drawer" inverseEntity="CardEntity"/>
+    </entity>
+
+    <entity name="CardEntity" representedClassName="CardEntity" syncable="YES">
+        <attribute name="audioFileName" optional="YES" attributeType="String"/>
+        <attribute name="bodyText" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationSec" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLocked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="snippet" optional="YES" attributeType="String"/>
+        <attribute name="starred" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="typedCopy" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="drawer" optional="YES" maxCount="1" deletionRule="Nullify"
+                      destinationEntity="DrawerEntity" inverseName="cards" inverseEntity="DrawerEntity"/>
+    </entity>
+</model>

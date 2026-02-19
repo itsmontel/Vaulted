@@ -1,0 +1,594 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		VA0101A10000000000000002 /* VaultedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000002 /* VaultedApp.swift */; };
+		VA0101A10000000000000003 /* Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000003 /* Entities.swift */; };
+		VA0101A10000000000000004 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000004 /* PersistenceController.swift */; };
+		VA0101A10000000000000005 /* SecurityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000005 /* SecurityService.swift */; };
+		VA0101A10000000000000006 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000006 /* AudioService.swift */; };
+		VA0101A10000000000000007 /* CardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000007 /* CardRepository.swift */; };
+		VA0101A10000000000000008 /* DrawerRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000008 /* DrawerRepository.swift */; };
+		VA0101A10000000000000009 /* CardDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000009 /* CardDetailViewModel.swift */; };
+		VA0101A1000000000000000A /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000A /* LibraryViewModel.swift */; };
+		VA0101A1000000000000000B /* HomeCaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000B /* HomeCaptureViewModel.swift */; };
+		VA0101A1000000000000000C /* CardDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000C /* CardDetailScreen.swift */; };
+		VA0101A1000000000000000D /* AudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000D /* AudioPlayerView.swift */; };
+		VA0101A1000000000000000E /* LibraryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000E /* LibraryScreen.swift */; };
+		VA0101A1000000000000000F /* BookshelfMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000000F /* BookshelfMonthView.swift */; };
+		VA0101A10000000000000010 /* DrawerCabinetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000010 /* DrawerCabinetView.swift */; };
+		VA0101A10000000000000011 /* TimelineStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000011 /* TimelineStackView.swift */; };
+		VA0101A10000000000000012 /* CardRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000012 /* CardRowView.swift */; };
+		VA0101A10000000000000013 /* TextComposerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000013 /* TextComposerSheet.swift */; };
+		VA0101A10000000000000014 /* HomeCaptureScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000014 /* HomeCaptureScreen.swift */; };
+		VA0101A10000000000000015 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000015 /* AppTheme.swift */; };
+		VA0101A10000000000000016 /* Vaulted.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = VA0101E10000000000000001 /* Vaulted.xcdatamodeld */; };
+		VA0101A10000000000000018 /* SpeechTranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000018 /* SpeechTranscriptionService.swift */; };
+		VA0101A20000000000000001 /* Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = VA0101B20000000000000001 /* Speech.framework */; };
+		VA0101A10000000000000019 /* NLTitleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000019 /* NLTitleGenerator.swift */; };
+		VA0101A1000000000000001A /* BookOpenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001A /* BookOpenView.swift */; };
+		VA0101A1000000000000001B /* GlobalSearchScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001B /* GlobalSearchScreen.swift */; };
+		VA0101A1000000000000001C /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001C /* SettingsScreen.swift */; };
+		VA0101A1000000000000001D /* VaultedTutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001D /* VaultedTutorialView.swift */; };
+		VA0101A1000000000000001E /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001E /* SubscriptionService.swift */; };
+		VA0101A1000000000000001F /* OnboardingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001F /* OnboardingManager.swift */; };
+		VA0101A10000000000000020 /* WelcomeSplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000020 /* WelcomeSplashView.swift */; };
+		VA0101A10000000000000021 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000021 /* PaywallView.swift */; };
+		VA0101A10000000000000022 /* PrivacyModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000022 /* PrivacyModalView.swift */; };
+		VA0101A10000000000000023 /* LegalPolicyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000023 /* LegalPolicyScreen.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		VA0101B10000000000000001 /* Vaulted.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vaulted.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		VA0101B10000000000000002 /* VaultedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultedApp.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000003 /* Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entities.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000004 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000005 /* SecurityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityService.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000006 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000007 /* CardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRepository.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000008 /* DrawerRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerRepository.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000009 /* CardDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailViewModel.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000A /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000B /* HomeCaptureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCaptureViewModel.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000C /* CardDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailScreen.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000D /* AudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerView.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000E /* LibraryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryScreen.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000000F /* BookshelfMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookshelfMonthView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000010 /* DrawerCabinetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerCabinetView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000011 /* TimelineStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineStackView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000012 /* CardRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRowView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000013 /* TextComposerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextComposerSheet.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000014 /* HomeCaptureScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCaptureScreen.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000015 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		VA0101B10000000000000017 /* Vaulted.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Vaulted.xcdatamodel; sourceTree = "<group>"; };
+		VA0101B10000000000000018 /* SpeechTranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranscriptionService.swift; sourceTree = "<group>"; };
+		VA0101B20000000000000001 /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
+		VA0101B10000000000000019 /* NLTitleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLTitleGenerator.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001A /* BookOpenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookOpenView.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001B /* GlobalSearchScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchScreen.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001C /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001D /* VaultedTutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultedTutorialView.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001E /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
+		VA0101B1000000000000001F /* OnboardingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingManager.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000020 /* WelcomeSplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSplashView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000021 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000022 /* PrivacyModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyModalView.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000023 /* LegalPolicyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalPolicyScreen.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000024 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		VA0101C10000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				VA0101A20000000000000001 /* Speech.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		VA0101D10000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000024 /* Configuration.storekit */,
+				VA0101D10000000000000002 /* App */,
+				VA0101D10000000000000003 /* Models */,
+				VA0101D10000000000000004 /* Persistence */,
+				VA0101D10000000000000005 /* Services */,
+				VA0101D10000000000000006 /* Repositories */,
+				VA0101D10000000000000007 /* ViewModels */,
+				VA0101D10000000000000008 /* Views */,
+				VA0101D10000000000000009 /* Theme */,
+				VA0101D1000000000000000A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000002 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000002 /* VaultedApp.swift */,
+				VA0101B10000000000000016 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000003 /* Entities.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000004 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000004 /* PersistenceController.swift */,
+				VA0101E10000000000000001 /* Vaulted.xcdatamodeld */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101D1000000000000000B /* Security */,
+				VA0101D1000000000000000C /* Audio */,
+				VA0101D1000000000000000F /* Speech */,
+				VA0101D10000000000000020 /* Text */,
+				VA0101D10000000000000021 /* Subscription */,
+				VA0101D10000000000000022 /* Onboarding */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000021 /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000001E /* SubscriptionService.swift */,
+			);
+			path = Subscription;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000022 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000001F /* OnboardingManager.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000020 /* Text */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000019 /* NLTitleGenerator.swift */,
+			);
+			path = Text;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000F /* Speech */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000018 /* SpeechTranscriptionService.swift */,
+			);
+			path = Speech;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000006 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000007 /* CardRepository.swift */,
+				VA0101B10000000000000008 /* DrawerRepository.swift */,
+			);
+			path = Repositories;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000007 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000009 /* CardDetailViewModel.swift */,
+				VA0101B1000000000000000A /* LibraryViewModel.swift */,
+				VA0101B1000000000000000B /* HomeCaptureViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000008 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101D1000000000000000D /* Screens */,
+				VA0101D1000000000000000E /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000009 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000015 /* AppTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000001 /* Vaulted.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000B /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000005 /* SecurityService.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000C /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000006 /* AudioService.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000D /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000000C /* CardDetailScreen.swift */,
+				VA0101B1000000000000000E /* LibraryScreen.swift */,
+				VA0101B10000000000000013 /* TextComposerSheet.swift */,
+				VA0101B10000000000000014 /* HomeCaptureScreen.swift */,
+				VA0101B1000000000000001B /* GlobalSearchScreen.swift */,
+				VA0101B1000000000000001C /* SettingsScreen.swift */,
+				VA0101B10000000000000023 /* LegalPolicyScreen.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000E /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000000D /* AudioPlayerView.swift */,
+				VA0101B1000000000000000F /* BookshelfMonthView.swift */,
+				VA0101B1000000000000001A /* BookOpenView.swift */,
+				VA0101B10000000000000010 /* DrawerCabinetView.swift */,
+				VA0101B10000000000000020 /* WelcomeSplashView.swift */,
+				VA0101B10000000000000021 /* PaywallView.swift */,
+				VA0101B10000000000000022 /* PrivacyModalView.swift */,
+				VA0101B10000000000000011 /* TimelineStackView.swift */,
+				VA0101B10000000000000012 /* CardRowView.swift */,
+				VA0101B1000000000000001D /* VaultedTutorialView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		VA0101F10000000000000001 /* Vaulted */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = VA0102010000000000000002 /* Build configuration list for PBXNativeTarget "Vaulted" */;
+			buildPhases = (
+				VA0101F10000000000000002 /* Sources */,
+				VA0101C10000000000000001 /* Frameworks */,
+				VA0101F10000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Vaulted;
+			productName = Vaulted;
+			productReference = VA0101B10000000000000001 /* Vaulted.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		VA0102010000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					VA0101F10000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = VA0102010000000000000003 /* Build configuration list for PBXProject "Vaulted" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = VA0101D10000000000000001;
+			productRefGroup = VA0101D1000000000000000A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				VA0101F10000000000000001 /* Vaulted */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		VA0101F10000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		VA0101F10000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				VA0101A10000000000000002 /* VaultedApp.swift in Sources */,
+				VA0101A10000000000000003 /* Entities.swift in Sources */,
+				VA0101A10000000000000004 /* PersistenceController.swift in Sources */,
+				VA0101A10000000000000005 /* SecurityService.swift in Sources */,
+				VA0101A10000000000000006 /* AudioService.swift in Sources */,
+				VA0101A10000000000000007 /* CardRepository.swift in Sources */,
+				VA0101A10000000000000008 /* DrawerRepository.swift in Sources */,
+				VA0101A10000000000000009 /* CardDetailViewModel.swift in Sources */,
+				VA0101A1000000000000000A /* LibraryViewModel.swift in Sources */,
+				VA0101A1000000000000000B /* HomeCaptureViewModel.swift in Sources */,
+				VA0101A1000000000000000C /* CardDetailScreen.swift in Sources */,
+				VA0101A1000000000000000D /* AudioPlayerView.swift in Sources */,
+				VA0101A1000000000000000E /* LibraryScreen.swift in Sources */,
+				VA0101A1000000000000000F /* BookshelfMonthView.swift in Sources */,
+				VA0101A10000000000000010 /* DrawerCabinetView.swift in Sources */,
+				VA0101A10000000000000011 /* TimelineStackView.swift in Sources */,
+				VA0101A10000000000000012 /* CardRowView.swift in Sources */,
+				VA0101A10000000000000013 /* TextComposerSheet.swift in Sources */,
+				VA0101A10000000000000014 /* HomeCaptureScreen.swift in Sources */,
+				VA0101A10000000000000015 /* AppTheme.swift in Sources */,
+				VA0101A10000000000000016 /* Vaulted.xcdatamodeld in Sources */,
+				VA0101A10000000000000018 /* SpeechTranscriptionService.swift in Sources */,
+				VA0101A10000000000000019 /* NLTitleGenerator.swift in Sources */,
+				VA0101A1000000000000001A /* BookOpenView.swift in Sources */,
+				VA0101A1000000000000001B /* GlobalSearchScreen.swift in Sources */,
+				VA0101A1000000000000001C /* SettingsScreen.swift in Sources */,
+				VA0101A1000000000000001D /* VaultedTutorialView.swift in Sources */,
+				VA0101A1000000000000001E /* SubscriptionService.swift in Sources */,
+				VA0101A1000000000000001F /* OnboardingManager.swift in Sources */,
+				VA0101A10000000000000020 /* WelcomeSplashView.swift in Sources */,
+				VA0101A10000000000000021 /* PaywallView.swift in Sources */,
+				VA0101A10000000000000022 /* PrivacyModalView.swift in Sources */,
+				VA0101A10000000000000023 /* LegalPolicyScreen.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		VA0103010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		VA0103010000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		VA0103010000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 3KCUWMGF4F;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Vaulted;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Vaulted uses Face ID to protect your Private drawer.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vaulted uses the microphone to record voice notes for your private journal.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.Vaulted;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		VA0103010000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 3KCUWMGF4F;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Vaulted;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Vaulted uses Face ID to protect your Private drawer.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vaulted uses the microphone to record voice notes for your private journal.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.Vaulted;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		VA0102010000000000000002 /* Build configuration list for PBXNativeTarget "Vaulted" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				VA0103010000000000000003 /* Debug */,
+				VA0103010000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		VA0102010000000000000003 /* Build configuration list for PBXProject "Vaulted" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				VA0103010000000000000001 /* Debug */,
+				VA0103010000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		VA0101E10000000000000001 /* Vaulted.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				VA0101B10000000000000017 /* Vaulted.xcdatamodel */,
+			);
+			currentVersion = VA0101B10000000000000017 /* Vaulted.xcdatamodel */;
+			path = Vaulted.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = VA0102010000000000000001 /* Project object */;
+}
