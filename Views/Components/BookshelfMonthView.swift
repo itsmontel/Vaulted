@@ -87,14 +87,20 @@ private enum OpenPhase { case idle, lifting, opening, presented }
 struct BookshelfMonthView: View {
     @ObservedObject var vm: LibraryViewModel
     @Binding var selectedCard: CardEntity?
+    var showLockIndicator: Bool = false
 
     @State private var liftedId: String?       = nil
     @State private var coverFlip: Double       = 0
     @State private var openBook: ShelfBook?    = nil
     @State private var openPhase: OpenPhase    = .idle
 
-    // Wider books to fill screen better (6 per row)
-    private let spineWidths:  [CGFloat] = [58, 64, 56, 62, 60, 58, 64, 56, 62, 60, 58, 64]
+    // Navigation offsets — 0 = current period, negative = past
+    @State private var dailyWeekOffset: Int  = 0   // how many weeks back for daily view
+    @State private var weeklyPageOffset: Int = 0   // how many batches of 12 weeks back
+    @State private var yearOffset: Int       = 0   // how many years back for monthly view
+
+    // Slimmer books at 6 per row to fill the shelf naturally
+    private let spineWidths:  [CGFloat] = [46, 52, 44, 50, 48, 46, 52, 44, 50, 48, 46, 52]
     private let spineHeights: [CGFloat] = [180, 168, 192, 162, 196, 174, 184, 166, 188, 170, 182, 164]
     private let tilts:        [Double]  = [0.0, 0.3, -0.2, 0.4, 0.0, -0.3, 0.2, -0.4, 0.1, 0.5, -0.1, 0.3]
 
@@ -109,7 +115,8 @@ struct BookshelfMonthView: View {
 
     private var monthlyBooks: [ShelfBook] {
         let cal  = Calendar.current
-        let year = cal.component(.year, from: Date())
+        let currentYear = cal.component(.year, from: Date())
+        let year = currentYear + yearOffset
         let mFmt = DateFormatter(); mFmt.dateFormat = "MMMM yyyy"
         let existing = Dictionary(uniqueKeysWithValues: vm.groupedByMonth.map { ($0.label, $0.cards) })
         return (1...12).map { month in
@@ -131,8 +138,10 @@ struct BookshelfMonthView: View {
         let fmt  = DateFormatter(); fmt.dateFormat = "MMM d"
         let existing = Dictionary(uniqueKeysWithValues: vm.groupedForBookshelf.map { ($0.label, $0.cards) })
         var starts: [Date] = []
-        var cur = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Date()
-        for _ in 0..<8 {
+        // Each "page" is 12 weeks; weeklyPageOffset shifts back by 12-week batches
+        let baseWeek = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Date()
+        var cur = cal.date(byAdding: .weekOfYear, value: weeklyPageOffset * 12, to: baseWeek) ?? baseWeek
+        for _ in 0..<12 {
             starts.append(cur)
             cur = cal.date(byAdding: .weekOfYear, value: -1, to: cur) ?? cur
         }
@@ -154,12 +163,14 @@ struct BookshelfMonthView: View {
         let existing = Dictionary(uniqueKeysWithValues: vm.groupedForBookshelf.map { ($0.label, $0.cards) })
         var c = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
         c.weekday = 2
-        let monday = cal.date(from: c) ?? Date()
+        let thisMonday = cal.date(from: c) ?? Date()
+        // Shift by dailyWeekOffset weeks (0 = this week, -1 = last week, etc.)
+        let monday = cal.date(byAdding: .weekOfYear, value: dailyWeekOffset, to: thisMonday) ?? thisMonday
         return (0..<7).map { offset in
             let day   = cal.date(byAdding: .day, value: offset, to: monday) ?? monday
             let sub   = fmt.string(from: day)
             let cards = existing[sub] ?? []
-            return makeBook(id: "day-\(offset)", label: dayNames[offset],
+            return makeBook(id: "day-\(dailyWeekOffset)-\(offset)", label: dayNames[offset],
                             short: shorts[offset], sub: sub, cards: cards, idx: offset)
         }
     }
@@ -182,7 +193,21 @@ struct BookshelfMonthView: View {
     }
 
     private var bookRows: [[ShelfBook]] {
-        stride(from: 0, to: books.count, by: 6).map { Array(books[$0..<min($0 + 6, books.count)]) }
+        let all = books
+        switch vm.bookshelfPeriod {
+        case .daily:
+            // 7 books → row of 4, row of 3
+            var rows: [[ShelfBook]] = []
+            if all.count > 0 { rows.append(Array(all.prefix(4))) }
+            if all.count > 4 { rows.append(Array(all.dropFirst(4))) }
+            return rows
+        case .weekly:
+            // 12 books → row of 6, row of 6
+            return stride(from: 0, to: all.count, by: 6).map { Array(all[$0..<min($0 + 6, all.count)]) }
+        case .monthly:
+            // 12 books → row of 6, row of 6
+            return stride(from: 0, to: all.count, by: 6).map { Array(all[$0..<min($0 + 6, all.count)]) }
+        }
     }
 
     // MARK: Body
@@ -209,34 +234,158 @@ struct BookshelfMonthView: View {
             }
         }) { book in
             OpenBookModal(
-                book:              book,
-                isPrivateUnlocked: vm.isPrivateUnlocked,
+                book:               book,
+                showLockIndicator:  showLockIndicator,
+                isPrivateUnlocked:  vm.isPrivateUnlocked,
                 onCardSelect: { card in selectedCard = card; openBook = nil },
                 onClose:      { openBook = nil }
             )
         }
     }
 
-    // MARK: Period picker
+    // MARK: Period picker + time navigation
     private var periodPicker: some View {
-        HStack(spacing: 0) {
-            ForEach(BookshelfPeriod.allCases, id: \.self) { period in
+        VStack(spacing: 0) {
+            // Row 1: mode tabs
+            HStack(spacing: 0) {
+                let orderedPeriods: [BookshelfPeriod] = [.daily, .weekly, .monthly]
+                ForEach(orderedPeriods, id: \.self) { period in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { vm.bookshelfPeriod = period }
+                    } label: {
+                        Text(period.rawValue)
+                            .font(.cardCaption)
+                            .fontWeight(vm.bookshelfPeriod == period ? .semibold : .regular)
+                            .foregroundColor(vm.bookshelfPeriod == period ? .accentGold : .inkMuted)
+                            .padding(.horizontal, 16).padding(.vertical, 9)
+                            .background(vm.bookshelfPeriod == period ? Color.accentGold.opacity(0.12) : Color.clear)
+                            .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 10).padding(.bottom, 4)
+
+            // Row 2: time navigation (back / label / forward)
+            HStack(spacing: 12) {
+                // ← Back
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) { vm.bookshelfPeriod = period }
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        switch vm.bookshelfPeriod {
+                        case .daily:   dailyWeekOffset  -= 1
+                        case .weekly:  weeklyPageOffset -= 1
+                        case .monthly: yearOffset       -= 1
+                        }
+                    }
                 } label: {
-                    Text(period.rawValue)
-                        .font(.cardCaption)
-                        .fontWeight(vm.bookshelfPeriod == period ? .semibold : .regular)
-                        .foregroundColor(vm.bookshelfPeriod == period ? .accentGold : .inkMuted)
-                        .padding(.horizontal, 16).padding(.vertical, 9)
-                        .background(vm.bookshelfPeriod == period ? Color.accentGold.opacity(0.12) : Color.clear)
-                        .cornerRadius(6)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.accentGold)
+                        .frame(width: 32, height: 32)
+                        .background(Color.accentGold.opacity(0.10))
+                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+
+                Spacer()
+
+                // Period label
+                VStack(spacing: 1) {
+                    Text(periodNavigationTitle)
+                        .font(.system(.subheadline, design: .serif).weight(.semibold))
+                        .foregroundColor(.inkPrimary)
+                    Text(periodNavigationSubtitle)
+                        .font(.system(.caption, design: .serif))
+                        .foregroundColor(.inkMuted)
+                }
+                .multilineTextAlignment(.center)
+
+                Spacer()
+
+                // → Forward (disabled at current/future)
+                let isAtPresent: Bool = {
+                    switch vm.bookshelfPeriod {
+                    case .daily:   return dailyWeekOffset  >= 0
+                    case .weekly:  return weeklyPageOffset >= 0
+                    case .monthly: return yearOffset       >= 0
+                    }
+                }()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        switch vm.bookshelfPeriod {
+                        case .daily:   dailyWeekOffset  += 1
+                        case .weekly:  weeklyPageOffset += 1
+                        case .monthly: yearOffset       += 1
+                        }
+                    }
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(isAtPresent ? .inkMuted.opacity(0.3) : .accentGold)
+                        .frame(width: 32, height: 32)
+                        .background(isAtPresent ? Color.clear : Color.accentGold.opacity(0.10))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isAtPresent)
             }
+            .padding(.horizontal, 16).padding(.bottom, 10)
+
+            Divider()
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
         .background(Color.paperBackground)
+    }
+
+    /// Human-readable title for the current time window
+    private var periodNavigationTitle: String {
+        let cal = Calendar.current
+        let fmt = DateFormatter()
+        switch vm.bookshelfPeriod {
+        case .daily:
+            var c = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+            c.weekday = 2
+            let monday = cal.date(from: c).flatMap { cal.date(byAdding: .weekOfYear, value: dailyWeekOffset, to: $0) } ?? Date()
+            let sunday = cal.date(byAdding: .day, value: 6, to: monday) ?? monday
+            fmt.dateFormat = "MMM d"
+            if dailyWeekOffset == 0 { return "This Week" }
+            if dailyWeekOffset == -1 { return "Last Week" }
+            return "\(fmt.string(from: monday)) – \(fmt.string(from: sunday))"
+        case .weekly:
+            if weeklyPageOffset == 0 { return "Recent 12 Weeks" }
+            let weeksBack = abs(weeklyPageOffset) * 12
+            return "\(weeksBack)–\(weeksBack + 11) Weeks Ago"
+        case .monthly:
+            let year = cal.component(.year, from: Date()) + yearOffset
+            if yearOffset == 0 { return "This Year" }
+            if yearOffset == -1 { return "Last Year" }
+            return "\(year)"
+        }
+    }
+
+    private var periodNavigationSubtitle: String {
+        let cal = Calendar.current
+        switch vm.bookshelfPeriod {
+        case .daily:
+            var c = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+            c.weekday = 2
+            let monday = cal.date(from: c).flatMap { cal.date(byAdding: .weekOfYear, value: dailyWeekOffset, to: $0) } ?? Date()
+            let sunday = cal.date(byAdding: .day, value: 6, to: monday) ?? monday
+            let fmt = DateFormatter(); fmt.dateFormat = "MMM d"
+            if dailyWeekOffset == 0 {
+                fmt.dateFormat = "MMM d"
+                return "\(fmt.string(from: monday)) – \(fmt.string(from: sunday))"
+            }
+            return "Mon – Sun"
+        case .weekly:
+            let base = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Date()
+            let newest = cal.date(byAdding: .weekOfYear, value: weeklyPageOffset * 12, to: base) ?? base
+            let oldest = cal.date(byAdding: .weekOfYear, value: weeklyPageOffset * 12 - 11, to: base) ?? base
+            let fmt = DateFormatter(); fmt.dateFormat = "MMM d, yyyy"
+            return "\(fmt.string(from: oldest)) – \(fmt.string(from: newest))"
+        case .monthly:
+            let year = cal.component(.year, from: Date()) + yearOffset
+            return "Jan – Dec \(year)"
+        }
     }
 
     // MARK: Bookcase
@@ -248,44 +397,53 @@ struct BookshelfMonthView: View {
                     shelfRow(books: row)
                 }
             }
+            .padding(.leading, 2)
+            .padding(.trailing, 10)
+            .padding(.vertical, 16)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 24)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(hex: "#2C2416"), lineWidth: 4)
+            RoundedRectangle(cornerRadius: 0)
+                .stroke(Color(hex: "#2C2416"), lineWidth: 3)
         )
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(hex: "#1A1208").opacity(0.3))
-        )
-        .cornerRadius(12)
-        .shadow(color: Color(hex: "#1C1812").opacity(0.65), radius: 20, x: 0, y: 10)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 16)
+        .shadow(color: Color(hex: "#1C1812").opacity(0.55), radius: 14, x: 0, y: 8)
     }
 
     private func shelfRow(books: [ShelfBook]) -> some View {
-        let rowH = books.map { $0.spineHeight }.max().map { $0 + 36 } ?? 210
-        return ZStack(alignment: .bottom) {
-            Color.clear.frame(height: rowH + 20)
-            HStack(alignment: .bottom, spacing: 4) {
-                sideWall(h: rowH)
-                ForEach(books) { book in
-                    BookSpineView(
-                        book:      book,
-                        isLifted:  liftedId == book.id,
-                        flipAngle: liftedId == book.id ? coverFlip : 0
-                    )
-                    .onTapGesture { animateOpen(book) }
+        let rowH = books.map { $0.spineHeight }.max().map { $0 + 40 } ?? 210
+        return GeometryReader { geo in
+            let totalW    = geo.size.width
+            let wallW: CGFloat = 10
+            let gap: CGFloat   = 3
+            let gapCount  = max(1, books.count - 1)
+            let availableW = totalW - wallW * 2 - CGFloat(gapCount) * gap - 4
+            let computedW  = max(36, availableW / CGFloat(max(1, books.count)))
+
+            ZStack(alignment: .bottom) {
+                Color.clear.frame(height: rowH + 20)
+                HStack(alignment: .bottom, spacing: gap) {
+                    sideWall(h: rowH)
+                    ForEach(books) { book in
+                        BookSpineView(
+                            book:          book,
+                            isLifted:      liftedId == book.id,
+                            flipAngle:     liftedId == book.id ? coverFlip : 0,
+                            overrideWidth: computedW
+                        )
+                        .onTapGesture {
+                            guard !book.isEmpty else { return }
+                            animateOpen(book)
+                        }
+                    }
+                    sideWall(h: rowH)
                 }
-                sideWall(h: rowH)
+                .padding(.leading, 0)   // flush left — wall sits at edge
+                .padding(.trailing, 0)
+                .padding(.top, 18)
+                .frame(maxWidth: .infinity, minHeight: rowH, alignment: .bottom)
+                shelfPlank
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 18)
-            .frame(maxWidth: .infinity, minHeight: rowH, alignment: .bottom)
-            shelfPlank
         }
+        .frame(height: rowH + 38)
     }
 
     private var bookcaseBackWall: some View {
@@ -385,22 +543,25 @@ private struct BookSpineView: View {
     let book: ShelfBook
     let isLifted: Bool
     let flipAngle: Double
+    var overrideWidth: CGFloat? = nil
 
     private var c: SpineColor { book.spineColor }
+    private var effectiveWidth: CGFloat { overrideWidth ?? book.spineWidth }
 
     var body: some View {
         ZStack(alignment: .bottom) {
             // Page-edge depth layers (show paper pages from the side)
             ForEach(0..<4, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 1.5)
-                    .fill(Color(hex: "#C8C0A8").opacity(0.80 - Double(i) * 0.12))
-                    .frame(width: book.spineWidth,
+                    .fill(Color(hex: "#C8C0A8").opacity(book.isEmpty ? 0.25 : (0.80 - Double(i) * 0.12)))
+                    .frame(width: effectiveWidth,
                            height: book.spineHeight - CGFloat(i) * 2.2)
                     .offset(x: CGFloat(i + 1) * 1.1, y: CGFloat(i + 1) * 0.8)
             }
             // Main spine face
             spineBody
-                .frame(width: book.spineWidth, height: book.spineHeight)
+                .frame(width: effectiveWidth, height: book.spineHeight)
+                .opacity(book.isEmpty ? 0.30 : 1.0)
                 .rotation3DEffect(
                     .degrees(flipAngle),
                     axis: (x: 0, y: 1, z: 0),
@@ -416,7 +577,7 @@ private struct BookSpineView: View {
             perspective: 0.3
         )
         .shadow(
-            color: Color.black.opacity(isLifted ? 0.68 : 0.30),
+            color: Color.black.opacity(book.isEmpty ? 0.08 : (isLifted ? 0.68 : 0.30)),
             radius: isLifted ? 20 : 5,
             x: isLifted ? -7 : -1.5,
             y: isLifted ? -10 : 2
@@ -477,13 +638,13 @@ private struct BookSpineView: View {
 
     private var spineLabels: some View {
         VStack(spacing: 0) {
-            // Top cap decorative band (gold/accent line)
+            // Top cap decorative band
             VStack(spacing: 1.5) {
                 Rectangle().fill(c.accentLine.opacity(0.70)).frame(height: 1.5)
                 Rectangle().fill(c.accentLine.opacity(0.30)).frame(height: 0.7)
             }.padding(.top, 5).padding(.horizontal, 4)
 
-            Spacer(minLength: 5)
+            Spacer(minLength: 4)
 
             // Short label (e.g. "JAN", "MON")
             Text(book.shortLabel)
@@ -491,19 +652,41 @@ private struct BookSpineView: View {
                 .tracking(1.2)
                 .foregroundColor(c.textColor.opacity(0.85))
 
+            Spacer(minLength: 3)
+
+            // Count badge — near top, always visible above the shelf plank
+            Group {
+                if book.isEmpty {
+                    Text("0")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(c.textColor.opacity(0.22))
+                        .padding(.horizontal, 4).padding(.vertical, 1.5)
+                        .background(c.dark.opacity(0.15))
+                        .cornerRadius(3)
+                } else {
+                    Text("\(book.cards.count)")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(c.textColor)
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(c.accentLine.opacity(0.55))
+                        .cornerRadius(3)
+                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(c.accentLine.opacity(0.7), lineWidth: 0.5))
+                }
+            }
+
             Spacer(minLength: 4)
 
             // Accent rule
             Rectangle()
                 .fill(c.accentLine.opacity(0.50))
-                .frame(width: book.spineWidth * 0.55, height: 0.8)
+                .frame(width: effectiveWidth * 0.55, height: 0.8)
 
             Spacer(minLength: 10)
 
             // Main rotated title
             Text(book.label)
                 .font(.system(
-                    size: max(11, min(14, book.spineWidth / 3.0)),
+                    size: max(11, min(14, effectiveWidth / 3.0)),
                     weight: .semibold,
                     design: .serif
                 ))
@@ -511,36 +694,30 @@ private struct BookSpineView: View {
                 .lineLimit(3)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.6)
-                .frame(width: book.spineHeight * 0.52, height: book.spineWidth - 8)
+                .frame(width: book.spineHeight * 0.52, height: effectiveWidth - 8)
                 .rotationEffect(.degrees(-90))
 
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
 
             // Decorative cross ornament
             if book.hasDecorativeCross {
                 ZStack {
-                    Rectangle().fill(c.accentLine.opacity(0.50)).frame(width: book.spineWidth * 0.50, height: 0.8)
+                    Rectangle().fill(c.accentLine.opacity(0.50)).frame(width: effectiveWidth * 0.50, height: 0.8)
                     Rectangle().fill(c.accentLine.opacity(0.50)).frame(width: 0.8, height: 10)
-                }.padding(.bottom, 5)
+                }.padding(.bottom, 4)
             }
 
             Text(book.subLabel)
                 .font(.system(size: 9, weight: .medium, design: .serif))
                 .foregroundColor(c.textColor.opacity(0.65))
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 36)
 
-            Text(book.isEmpty ? "—" : "\(book.cards.count)")
-                .font(.system(size: 7, design: .monospaced))
-                .foregroundColor(c.textColor.opacity(0.35))
-
-            Spacer(minLength: 5)
-
-            // Bottom cap band
+            // Bottom cap band — sits well above the shelf plank
             VStack(spacing: 1.5) {
                 Rectangle().fill(c.accentLine.opacity(0.30)).frame(height: 0.7)
                 Rectangle().fill(c.accentLine.opacity(0.70)).frame(height: 1.5)
-            }.padding(.bottom, 5).padding(.horizontal, 4)
+            }.padding(.bottom, 8).padding(.horizontal, 4)
         }
     }
 }
@@ -550,6 +727,7 @@ private struct BookSpineView: View {
 // MARK: ─────────────────────────────────────────────────────────────────────
 private struct OpenBookModal: View {
     let book: ShelfBook
+    let showLockIndicator: Bool
     let isPrivateUnlocked: Bool
     let onCardSelect: (CardEntity) -> Void
     let onClose: () -> Void
@@ -559,7 +737,7 @@ private struct OpenBookModal: View {
     @State private var pageTurning = false
     @State private var turnForward = true
 
-    private let cardsPerPage = 5
+    private let cardsPerPage = 6
     private var totalPages: Int { max(1, Int(ceil(Double(book.cards.count) / Double(cardsPerPage)))) }
     private func pageCards(_ p: Int) -> [CardEntity] {
         let s = p * cardsPerPage
@@ -569,67 +747,56 @@ private struct OpenBookModal: View {
     }
 
     var body: some View {
-        ZStack {
-            // Dark library atmosphere — fills full screen
-            ambientBG.ignoresSafeArea()
+        GeometryReader { proxy in
+            let sw = proxy.size.width
+            let sh = proxy.size.height
+            // Single book page — takes 88% of width with safe margins
+            let bookW = min(sw * 0.92, sw - 24)
+            let bookH = min(sh * 0.84, 680.0)
 
-            // Book spread in center
-            GeometryReader { geo in
-                let sw = geo.size.width
-                let sh = geo.size.height
+            ZStack {
+                ambientBG.ignoresSafeArea()
 
-                // Book takes 92% of screen width, split evenly into two pages
-                let bookW = sw * 0.92
-                let bookH = min(sh * 0.68, 520.0)
-                let pageW = (bookW - 12) / 2   // 12pt for binding
+                // Drop shadow
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.black.opacity(0.70))
+                    .frame(width: bookW + 20, height: bookH + 20)
+                    .blur(radius: 28)
 
-                ZStack {
-                    // Drop shadow
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.black.opacity(0.72))
-                        .frame(width: bookW + 18, height: bookH + 18)
-                        .blur(radius: 26)
-
-                    // Left page
-                    leftPage(w: pageW, h: bookH)
-                        .offset(x: -(pageW / 2 + 6))
-
-                    // Leather binding spine
-                    leatherBinding(h: bookH)
-
-                    // Right page (with page-turn 3D effect)
-                    rightPage(w: pageW, h: bookH)
-                        .offset(x: pageW / 2 + 6)
-                        .rotation3DEffect(
-                            .degrees(pageTurning ? (turnForward ? -90 : 90) : 0),
-                            axis: (x: 0, y: 1, z: 0),
-                            anchor: .leading,
-                            perspective: 0.55
-                        )
-                        .animation(
-                            pageTurning ? .easeIn(duration: 0.22) : .easeOut(duration: 0.22),
-                            value: pageTurning
-                        )
-                }
-                .frame(width: bookW, height: bookH)
-                .scaleEffect(appeared ? 1.0 : 0.78)
-                .opacity(appeared ? 1.0 : 0.0)
-                .offset(y: appeared ? 0 : 55)
-                .animation(.spring(response: 0.44, dampingFraction: 0.74), value: appeared)
-                // Centre in the available space (between header and footer)
-                .position(x: sw / 2, y: sh / 2)
+                // Single page with left leather binding accent
+                singlePage(w: bookW, h: bookH)
+                    .rotation3DEffect(
+                        .degrees(pageTurning ? (turnForward ? -90 : 90) : 0),
+                        axis: (x: 0, y: 1, z: 0),
+                        anchor: .leading,
+                        perspective: 0.45
+                    )
+                    .animation(
+                        pageTurning ? .easeIn(duration: 0.22) : .easeOut(duration: 0.22),
+                        value: pageTurning
+                    )
             }
-
-            // Chrome (close + nav arrows) — sits above everything
-            chrome
+            .frame(width: bookW, height: bookH)
+            .scaleEffect(appeared ? 1.0 : 0.80)
+            .opacity(appeared ? 1.0 : 0.0)
+            .offset(y: appeared ? 0 : 50)
+            .animation(.spring(response: 0.42, dampingFraction: 0.75), value: appeared)
+            .position(x: sw / 2, y: sh / 2)
         }
         .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) { appeared = true } }
         .gesture(DragGesture(minimumDistance: 44)
             .onEnded { v in
-                if v.translation.width < -50 { turnPage(forward: true) }
-                else if v.translation.width > 50 { turnPage(forward: false) }
+                if v.translation.width < -50      { turnPage(forward: true)  }
+                else if v.translation.width > 50  { turnPage(forward: false) }
+                else if v.translation.height > 80 { dismissWithAnimation()   }
             }
         )
+    }
+
+    private func dismissWithAnimation() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.easeOut(duration: 0.18)) { appeared = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) { onClose() }
     }
 
     // MARK: Ambient background
@@ -643,7 +810,6 @@ private struct OpenBookModal: View {
                 ],
                 startPoint: .top, endPoint: .bottom
             )
-            // Warm candlelight glow
             Ellipse()
                 .fill(RadialGradient(
                     colors: [Color.accentGold.opacity(0.10), Color.clear],
@@ -654,116 +820,141 @@ private struct OpenBookModal: View {
         }
     }
 
-    // MARK: Left page (title / chapter page)
-    private func leftPage(w: CGFloat, h: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: "#F4EEE0"))
-            // Spine-side shadow
-            HStack {
-                Spacer()
-                LinearGradient(
-                    colors: [Color.black.opacity(0.08), Color.clear],
-                    startPoint: .trailing, endPoint: .leading
-                ).frame(width: 36)
-            }.cornerRadius(4)
+    // MARK: Single page
+    private func singlePage(w: CGFloat, h: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            // Page background — warm aged paper with slight texture
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: "#F7F1E3"), location: 0),
+                            .init(color: Color(hex: "#F2EAD8"), location: 1),
+                        ],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
 
-            VStack(alignment: .leading, spacing: 0) {
-                // Top rule
-                Rectangle().fill(Color(hex: "#2A2010").opacity(0.20)).frame(height: 0.8)
-                    .padding(.horizontal, 22).padding(.top, 26)
-
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(book.shortLabel)
-                        .font(.system(size: 9, weight: .bold, design: .serif)).tracking(3.5)
-                        .foregroundColor(Color(hex: "#8B6A38")).padding(.top, 20)
-                    Text(book.label)
-                        .font(.system(size: min(30, max(20, 180 / max(1, CGFloat(book.label.count)))),
-                                      weight: .bold, design: .serif))
-                        .foregroundColor(Color(hex: "#1C1812"))
-                        .lineLimit(3).minimumScaleFactor(0.55)
-                    Text(book.subLabel)
-                        .font(.system(size: 13, design: .serif))
-                        .foregroundColor(Color(hex: "#70675E"))
-                }
-                .padding(.horizontal, 22).padding(.top, 8)
-
-                // Ledger lines (vintage look)
-                VStack(spacing: 0) {
-                    ForEach(0..<12, id: \.self) { i in
-                        Spacer()
-                        Rectangle().fill(Color(hex: "#2A2010").opacity(i % 5 == 0 ? 0.13 : 0.05))
-                            .frame(height: i % 5 == 0 ? 0.8 : 0.4)
-                    }
+            // Subtle horizontal ruling lines (like a journal page)
+            VStack(spacing: 0) {
+                ForEach(0..<30, id: \.self) { i in
                     Spacer()
+                    Rectangle()
+                        .fill(Color(hex: "#2A2010").opacity(i % 5 == 0 ? 0.07 : 0.035))
+                        .frame(height: i % 5 == 0 ? 0.7 : 0.4)
                 }
-                .frame(height: h * 0.26).padding(.horizontal, 22).padding(.top, 20)
-
                 Spacer()
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("CONTENTS")
-                        .font(.system(size: 8, weight: .semibold, design: .serif)).tracking(2.5)
-                        .foregroundColor(Color(hex: "#70675E").opacity(0.60))
-                    Text(book.isEmpty ? "No entries yet"
-                         : "\(book.cards.count) recorded \(book.cards.count == 1 ? "entry" : "entries")")
-                        .font(.system(size: 13, design: .serif)).foregroundColor(Color(hex: "#1C1812"))
-                    if totalPages > 1 {
-                        Text("\(totalPages) pages — swipe to turn")
-                            .font(.system(size: 10, design: .serif)).italic()
-                            .foregroundColor(Color(hex: "#70675E").opacity(0.55))
-                    }
-                }.padding(.horizontal, 22).padding(.bottom, 22)
-
-                Text("—")
-                    .font(.system(size: 10, design: .serif))
-                    .foregroundColor(Color(hex: "#2A2010").opacity(0.20))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.bottom, 18)
             }
-        }
-        .frame(width: w, height: h)
-    }
+            .padding(.horizontal, 0)
+            .padding(.top, 68) // start lines below header area
 
-    // MARK: Right page (entries list)
-    private func rightPage(w: CGFloat, h: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 4).fill(Color(hex: "#F8F3E8"))
-            // Spine-side shadow
-            HStack {
+            // Left binding shadow stripe
+            HStack(spacing: 0) {
                 LinearGradient(
-                    colors: [Color.black.opacity(0.07), Color.clear],
+                    colors: [Color(hex: "#5C3A1A").opacity(0.60),
+                             Color(hex: "#8B6438").opacity(0.20),
+                             Color.clear],
                     startPoint: .leading, endPoint: .trailing
-                ).frame(width: 28)
+                )
+                .frame(width: 20)
                 Spacer()
-            }.cornerRadius(4)
+            }.cornerRadius(8)
+
+            // Right page curl shadow
+            HStack(spacing: 0) {
+                Spacer()
+                LinearGradient(
+                    colors: [Color.clear, Color.black.opacity(0.05)],
+                    startPoint: .leading, endPoint: .trailing
+                ).frame(width: 8)
+            }.cornerRadius(8)
 
             VStack(spacing: 0) {
-                // Running header
-                HStack {
-                    Text(book.subLabel.uppercased())
-                        .font(.system(size: 8, weight: .semibold, design: .serif)).tracking(2)
-                        .foregroundColor(Color(hex: "#8B6A38"))
-                    Spacer()
-                    HStack(spacing: 6) {
-                        ForEach(0..<totalPages, id: \.self) { i in
-                            Circle()
-                                .fill(i == currentPage ? Color.accentGold : Color(hex: "#2A2010").opacity(0.18))
-                                .frame(width: 6, height: 6)
+                // ── Header ────────────────────────────────────────
+                ZStack {
+                    // Decorative header background
+                    LinearGradient(
+                        colors: [Color(hex: "#2A1A08").opacity(0.06), Color.clear],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                    .frame(height: 64)
+                    .cornerRadius(8)
+
+                    HStack(alignment: .center, spacing: 0) {
+                        // Close button
+                        Button { dismissWithAnimation() } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("Close")
+                                    .font(.system(size: 11, weight: .semibold, design: .serif))
+                            }
+                            .foregroundColor(Color(hex: "#7A5528"))
+                            .padding(.horizontal, 11).padding(.vertical, 6)
+                            .background(Color(hex: "#8B6A38").opacity(0.13))
+                            .cornerRadius(14)
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color(hex: "#8B6A38").opacity(0.28), lineWidth: 0.8))
                         }
+                        .buttonStyle(.plain)
+
+                        Spacer()
+
+                        // Centred title block
+                        VStack(spacing: 2) {
+                            Text(book.shortLabel)
+                                .font(.system(size: 8, weight: .black, design: .serif))
+                                .tracking(3)
+                                .foregroundColor(Color(hex: "#C49245"))
+                            Text(book.label)
+                                .font(.system(size: 15, weight: .bold, design: .serif))
+                                .foregroundColor(Color(hex: "#1C1812"))
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                            Text(book.subLabel)
+                                .font(.system(size: 9, design: .serif))
+                                .foregroundColor(Color(hex: "#70675E"))
+                        }
+                        .multilineTextAlignment(.center)
+
+                        Spacer()
+
+                        // Entry count + page dots
+                        VStack(alignment: .trailing, spacing: 4) {
+                            HStack(spacing: 3) {
+                                ForEach(0..<min(totalPages, 6), id: \.self) { i in
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(i == currentPage ? Color(hex: "#C49245") : Color(hex: "#2A2010").opacity(0.15))
+                                        .frame(width: i == currentPage ? 14 : 5, height: 4)
+                                        .animation(.spring(response: 0.3), value: currentPage)
+                                }
+                            }
+                            Text("\(book.cards.count) \(book.cards.count == 1 ? "entry" : "entries")")
+                                .font(.system(size: 8, design: .monospaced))
+                                .foregroundColor(Color(hex: "#70675E").opacity(0.70))
+                        }
+                        .frame(width: 62, alignment: .trailing)
                     }
-                }.padding(.horizontal, 20).padding(.vertical, 14)
+                    .padding(.horizontal, 20)
+                }
+                .frame(height: 64)
 
-                Rectangle().fill(Color(hex: "#2A2010").opacity(0.12)).frame(height: 0.5).padding(.horizontal, 20)
+                // Header divider — double rule
+                VStack(spacing: 2) {
+                    Rectangle().fill(Color(hex: "#C49245").opacity(0.50)).frame(height: 0.8)
+                    Rectangle().fill(Color(hex: "#2A2010").opacity(0.08)).frame(height: 0.4)
+                }
+                .padding(.horizontal, 16)
 
+                // ── Entries ───────────────────────────────────────
                 if book.isEmpty || pageCards(currentPage).isEmpty {
                     Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "square.dashed").font(.system(size: 30))
-                            .foregroundColor(Color(hex: "#2A2010").opacity(0.13))
+                    VStack(spacing: 16) {
+                        Image(systemName: "text.page.slash")
+                            .font(.system(size: 36))
+                            .foregroundColor(Color(hex: "#2A2010").opacity(0.10))
                         Text("No entries for this period")
-                            .font(.system(size: 12.5, design: .serif)).italic()
-                            .foregroundColor(Color(hex: "#70675E").opacity(0.42))
+                            .font(.system(size: 13, design: .serif)).italic()
+                            .foregroundColor(Color(hex: "#70675E").opacity(0.40))
                     }.frame(maxWidth: .infinity)
                     Spacer()
                 } else {
@@ -774,144 +965,141 @@ private struct OpenBookModal: View {
                                 id: \.element.objectID
                             ) { idx, card in
                                 entryRow(card: card, lineNum: currentPage * cardsPerPage + idx + 1)
-                                Rectangle().fill(Color(hex: "#2A2010").opacity(0.055))
-                                    .frame(height: 0.5).padding(.horizontal, 18)
+                                if idx < pageCards(currentPage).count - 1 {
+                                    Rectangle()
+                                        .fill(Color(hex: "#2A2010").opacity(0.07))
+                                        .frame(height: 0.7)
+                                        .padding(.horizontal, 20)
+                                }
                             }
-                        }.padding(.top, 10).padding(.bottom, 12)
+                        }
+                        .padding(.top, 8)
+                        .padding(.bottom, 10)
                     }
                 }
 
-                Spacer(minLength: 0)
-                Rectangle().fill(Color(hex: "#2A2010").opacity(0.10)).frame(height: 0.5).padding(.horizontal, 20)
-                Text("\(currentPage + 1)")
-                    .font(.system(size: 10, design: .serif))
-                    .foregroundColor(Color(hex: "#2A2010").opacity(0.28))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 12)
+                // ── Footer ────────────────────────────────────────
+                VStack(spacing: 0) {
+                    Rectangle().fill(Color(hex: "#C49245").opacity(0.30)).frame(height: 0.6).padding(.horizontal, 16)
+                    HStack {
+                        // Prev
+                        Button {
+                            guard currentPage > 0 else { return }
+                            turnPage(forward: false)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "chevron.left").font(.system(size: 9, weight: .semibold))
+                                Text("Prev")
+                            }
+                            .font(.system(size: 10, design: .serif))
+                            .foregroundColor(currentPage > 0 ? Color(hex: "#8B6A38") : Color(hex: "#8B6A38").opacity(0.25))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(currentPage == 0)
+
+                        Spacer()
+
+                        // Page number ornament
+                        HStack(spacing: 6) {
+                            Rectangle().fill(Color(hex: "#C49245").opacity(0.35)).frame(width: 16, height: 0.7)
+                            Text("\(currentPage + 1)")
+                                .font(.system(size: 10, weight: .medium, design: .serif))
+                                .foregroundColor(Color(hex: "#2A2010").opacity(0.32))
+                            Rectangle().fill(Color(hex: "#C49245").opacity(0.35)).frame(width: 16, height: 0.7)
+                        }
+
+                        Spacer()
+
+                        // Next
+                        Button {
+                            guard currentPage < totalPages - 1 else { return }
+                            turnPage(forward: true)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Text("Next")
+                                Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
+                            }
+                            .font(.system(size: 10, design: .serif))
+                            .foregroundColor(currentPage < totalPages - 1 ? Color(hex: "#8B6A38") : Color(hex: "#8B6A38").opacity(0.25))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(currentPage >= totalPages - 1)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                }
             }
+
+            // Page border
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: "#2A1A08").opacity(0.12), lineWidth: 0.8)
         }
         .frame(width: w, height: h)
+        .shadow(color: Color.black.opacity(0.35), radius: 20, x: 4, y: 8)
     }
 
-    // MARK: Entry row
+    // MARK: Entry row — classic style, tall and spacious
     private func entryRow(card: CardEntity, lineNum: Int) -> some View {
-        let locked = card.drawer?.isPrivate == true && !isPrivateUnlocked
+        let locked = showLockIndicator && !isPrivateUnlocked
         return Button {
             guard !locked else { return }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onCardSelect(card)
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 14) {
+                // Line number
                 Text(String(format: "%02d", lineNum))
-                    .font(.system(size: 8.5, design: .monospaced))
-                    .foregroundColor(Color(hex: "#2A2010").opacity(0.24)).frame(width: 20, alignment: .trailing)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(Color(hex: "#2A2010").opacity(0.28))
+                    .frame(width: 24, alignment: .trailing)
+
+                // Icon
                 Image(systemName: locked ? "lock.fill" : (card.isVoice ? "waveform" : "doc.text.fill"))
-                    .font(.system(size: 11))
-                    .foregroundColor(locked ? Color.accentGold : Color(hex: "#8B6A38").opacity(0.65))
-                    .frame(width: 16)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(locked ? "Private entry" : (card.title ?? "Untitled"))
-                        .font(.system(size: 13, weight: .medium, design: .serif))
-                        .foregroundColor(Color(hex: "#1C1812")).lineLimit(1)
-                    Text(locked ? "•••••••••••" : (card.snippet ?? ""))
-                        .font(.system(size: 10.5, design: .serif)).italic()
-                        .foregroundColor(Color(hex: "#70675E")).lineLimit(1)
+                    .font(.system(size: 14))
+                    .foregroundColor(locked ? Color(hex: "#C49245") : Color(hex: "#8B6A38").opacity(0.72))
+                    .frame(width: 20)
+
+                // Title + snippet (asterisks when locked)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(locked ? "••••••••••" : (card.title ?? "Untitled"))
+                        .font(.system(size: 15, weight: .semibold, design: .serif))
+                        .foregroundColor(Color(hex: "#1C1812"))
+                        .lineLimit(1)
+                    Text(locked ? "•••••••••••••" : (card.snippet ?? "Voice note"))
+                        .font(.system(size: 12, design: .serif)).italic()
+                        .foregroundColor(Color(hex: "#70675E"))
+                        .lineLimit(1)
                 }
+
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+
+                // Date + duration
+                VStack(alignment: .trailing, spacing: 4) {
                     if let d = card.createdAt {
-                        Text(fmtShort(d)).font(.system(size: 9, design: .monospaced))
-                            .foregroundColor(Color(hex: "#70675E").opacity(0.6))
+                        Text(locked ? "••••" : fmtShort(d))
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(Color(hex: "#70675E").opacity(0.65))
                     }
                     if card.isVoice && !locked {
-                        Text(fmtDur(card.durationSec)).font(.system(size: 8.5, design: .monospaced))
-                            .foregroundColor(Color(hex: "#8B6A38").opacity(0.5))
+                        Text(fmtDur(card.durationSec))
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(Color(hex: "#C49245").opacity(0.85))
+                    } else if card.isVoice && locked {
+                        Text("••:••")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(Color(hex: "#70675E").opacity(0.65))
                     }
                 }
-                Image(systemName: "chevron.right").font(.system(size: 8))
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(Color(hex: "#2A2010").opacity(0.18))
             }
-            .padding(.horizontal, 18).padding(.vertical, 11)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: Leather binding
-    private func leatherBinding(h: CGFloat) -> some View {
-        ZStack {
-            Rectangle()
-                .fill(LinearGradient(
-                    colors: [Color(hex: "#5C4022"), Color(hex: "#3C2810"), Color(hex: "#5C4022")],
-                    startPoint: .leading, endPoint: .trailing
-                ))
-                .frame(width: 12, height: h)
-            VStack(spacing: 13) {
-                ForEach(0..<10, id: \.self) { _ in
-                    Rectangle().fill(Color.black.opacity(0.28)).frame(width: 5, height: 1).cornerRadius(0.5)
-                }
-            }
-        }
-    }
-
-    // MARK: Chrome overlay (close + page nav)
-    private var chrome: some View {
-        VStack {
-            // Top bar
-            HStack {
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.easeOut(duration: 0.20)) { appeared = false }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) { onClose() }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
-                        Text("Close").font(.system(size: 13, design: .serif))
-                    }
-                    .foregroundColor(.white.opacity(0.72))
-                    .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(Color.white.opacity(0.09))
-                    .cornerRadius(22)
-                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.10), lineWidth: 0.5))
-                }
-                Spacer()
-                VStack(spacing: 2) {
-                    Text(book.label.uppercased())
-                        .font(.system(size: 10, weight: .bold, design: .serif)).tracking(2)
-                        .foregroundColor(.white.opacity(0.68)).lineLimit(1)
-                    Text(book.subLabel)
-                        .font(.system(size: 9, design: .serif)).foregroundColor(.white.opacity(0.30))
-                }
-                Spacer()
-                Text("pg \(currentPage + 1)/\(totalPages)")
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.30)).frame(minWidth: 64, alignment: .trailing)
-            }
-            .padding(.horizontal, 22).padding(.top, 60)
-
-            Spacer()
-
-            // Bottom page navigation
-            if totalPages > 1 {
-                HStack(spacing: 50) {
-                    navArrow(forward: false, enabled: currentPage > 0)
-                    navArrow(forward: true,  enabled: currentPage < totalPages - 1)
-                }
-                .padding(.bottom, 52)
-            }
-        }
-    }
-
-    private func navArrow(forward: Bool, enabled: Bool) -> some View {
-        Button { turnPage(forward: forward) } label: {
-            Image(systemName: forward ? "chevron.right" : "chevron.left")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.white.opacity(enabled ? 0.65 : 0.14))
-                .frame(width: 52, height: 52)
-                .background(Color.white.opacity(enabled ? 0.09 : 0.02))
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white.opacity(enabled ? 0.10 : 0.02), lineWidth: 0.5))
-        }.disabled(!enabled)
     }
 
     private func turnPage(forward: Bool) {

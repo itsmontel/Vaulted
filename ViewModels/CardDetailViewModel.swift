@@ -76,6 +76,11 @@ final class CardDetailViewModel: ObservableObject {
         cardRepo.update(card: card, tags: tagsInput)
     }
 
+    func setReminder(_ date: Date?) {
+        cardRepo.setReminder(card, date: date)
+        objectWillChange.send()
+    }
+
     func toggleStar() {
         cardRepo.toggleStar(card)
         objectWillChange.send()
@@ -85,6 +90,7 @@ final class CardDetailViewModel: ObservableObject {
         cardRepo.moveCard(card, toDrawer: drawer)
         isLocked = card.isLocked
         objectWillChange.send()
+        NotificationCenter.default.post(name: .vaultedRefreshTabCounts, object: nil)
     }
 
     func moveToPrivate() async {
@@ -95,6 +101,7 @@ final class CardDetailViewModel: ObservableObject {
             cardRepo.setLocked(card, locked: true)
             isLocked = true
             objectWillChange.send()
+            NotificationCenter.default.post(name: .vaultedRefreshTabCounts, object: nil)
         }
     }
 

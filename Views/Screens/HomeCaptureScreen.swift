@@ -516,40 +516,9 @@ struct SaveToDrawerSheet: View {
                 }
                 .padding(.horizontal)
 
-                // Transcribed notes (voice mode only) — tap to edit
+                // Transcribed notes (voice mode only) — tap to edit, convert to bullets
                 if !isTutorialMode, isVoiceMode {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Transcribed notes")
-                            .font(.cardCaption)
-                            .foregroundColor(.inkMuted)
-                        Group {
-                            if vm.isTranscribingPendingVoice {
-                                Text("Transcribing…")
-                                    .font(Font.cardBody)
-                                    .foregroundColor(.inkMuted)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            } else if vm.pendingVoiceTranscript != nil {
-                                TextEditor(text: $editableTranscript)
-                                    .font(Font.cardBody)
-                                    .foregroundColor(.inkPrimary)
-                                    .scrollContentBackground(.hidden)
-                                    .focused($isTranscriptFocused)
-                                    .frame(minHeight: 80, maxHeight: 160)
-                            } else {
-                                Text("Transcription unavailable")
-                                    .font(Font.cardBody)
-                                    .foregroundColor(.inkMuted)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        .padding()
-                        .background(Color.cardSurface.opacity(0.6))
-                        .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
-                    .onChange(of: vm.pendingVoiceTranscript) { newValue in
-                        if let t = newValue { editableTranscript = t }
-                    }
+                    transcribedNotesSection
                 }
 
                 Spacer()
@@ -558,12 +527,73 @@ struct SaveToDrawerSheet: View {
             .background(Color.paperBackground)
             .navigationBarTitleDisplayMode(.inline)
         }
+        .interactiveDismissDisabled(!isTutorialMode)
         .onAppear {
             if !isTutorialMode, isVoiceMode {
                 vm.audioService.stopPlayback()
                 vm.transcribePendingVoice()
                 editableTranscript = vm.pendingVoiceTranscript ?? ""
             }
+        }
+    }
+
+    private var transcribedNotesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Transcribed notes")
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundColor(.inkMuted)
+                .textCase(.uppercase)
+                .tracking(1.2)
+
+            if vm.isTranscribingPendingVoice {
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.accentGold))
+                        .scaleEffect(0.85)
+                    Text("Transcribing…")
+                        .font(Font.cardBody)
+                        .foregroundColor(.inkMuted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 24)
+                .padding(.horizontal, 16)
+            } else if vm.pendingVoiceTranscript != nil {
+                TextEditor(text: $editableTranscript)
+                    .font(Font.cardBody)
+                    .foregroundColor(.inkPrimary)
+                    .scrollContentBackground(.hidden)
+                    .focused($isTranscriptFocused)
+                    .frame(minHeight: 200, maxHeight: 420)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.cardSurface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        isTranscriptFocused
+                                            ? Color.accentGold.opacity(0.45)
+                                            : Color.borderMuted.opacity(0.5),
+                                        lineWidth: isTranscriptFocused ? 1.2 : 0.8
+                                    )
+                            )
+                    )
+            } else {
+                VStack(spacing: 6) {
+                    Image(systemName: "waveform.slash")
+                        .font(.system(size: 22))
+                        .foregroundColor(.inkMuted.opacity(0.4))
+                    Text("Transcription unavailable")
+                        .font(Font.cardBody)
+                        .foregroundColor(.inkMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 28)
+            }
+        }
+        .padding(.horizontal)
+        .onChange(of: vm.pendingVoiceTranscript) { newValue in
+            if let t = newValue { editableTranscript = t }
         }
     }
 

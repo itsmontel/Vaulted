@@ -51,38 +51,52 @@ struct SettingsScreen: View {
 
     // MARK: - Header
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Settings")
-                .font(.catalogTitle)
-                .foregroundColor(.inkPrimary)
-            Text("App preferences and security")
-                .font(.cardCaption)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(.accentGold)
+                Text("Settings")
+                    .font(.catalogTitle)
+                    .foregroundColor(.inkPrimary)
+            }
+            Text("Customize your Vaulted experience")
+                .font(.cardSnippet)
                 .foregroundColor(.inkMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .padding(.bottom, 24)
+        .padding(.top, 8)
+        .padding(.bottom, 32)
     }
 
     // MARK: - Theme Section
     private var themeSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Appearance")
 
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Image(systemName: "paintpalette.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.accentGold)
-                        .frame(width: 28)
-                    Text("Colour Theme")
-                        .font(.cardTitle)
-                        .foregroundColor(.inkPrimary)
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentGold.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "paintpalette.fill")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.accentGold)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Colour Theme")
+                            .font(.cardTitle)
+                            .foregroundColor(.inkPrimary)
+                        Text("Choose your preferred theme")
+                            .font(.cardCaption)
+                            .foregroundColor(.inkMuted)
+                    }
                 }
 
                 // Theme swatches grid
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 5), spacing: 12) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 5), spacing: 14) {
                     ForEach(AppThemeStyle.allCases) { style in
                         ThemeSwatch(style: style, isSelected: themeManager.current == style) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -91,70 +105,91 @@ struct SettingsScreen: View {
                         }
                     }
                 }
+                .padding(.top, 4)
 
                 // Selected theme label
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: themeManager.current.theme.icon)
-                        .font(.cardCaption)
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.accentGold)
                     Text(themeManager.current.theme.name)
                         .font(.cardCaption)
                         .foregroundColor(.inkMuted)
                     Text("·")
                         .foregroundColor(.borderMuted)
+                        .font(.cardCaption)
                     Text(themeManager.current.theme.isDark ? "Dark" : "Light")
                         .font(.cardCaption)
                         .foregroundColor(.inkMuted)
                 }
+                .padding(.top, 4)
             }
-            .padding(16)
-            .background(Color.cardSurface.opacity(0.7))
-            .cornerRadius(12)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.cardSurface)
+                    .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+            )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.borderMuted.opacity(0.3), lineWidth: 1)
             )
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 28)
+        .padding(.bottom, 32)
     }
 
     // MARK: - Security Section
     private var securitySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Security")
-            settingsRow(icon: "lock.fill", title: "Require unlock to view content") {
-                Toggle("", isOn: $lockContentByDefault)
-                    .labelsHidden()
-                    .tint(.accentGold)
-            }
-            .subtitle("Face ID or passcode when opening a card or section")
 
-            settingsRow(icon: "lock.rotation", title: "Lock when app goes to background") {
-                Toggle("", isOn: $lockOnBackground)
-                    .labelsHidden()
-                    .tint(.accentGold)
+            VStack(spacing: 12) {
+                settingsRow(icon: "lock.fill", 
+                           title: "Require unlock to view content",
+                           subtitle: "Face ID or passcode when opening a card or section") {
+                    Toggle("", isOn: $lockContentByDefault)
+                        .labelsHidden()
+                        .tint(.accentGold)
+                }
+
+                settingsRow(icon: "lock.rotation", 
+                           title: "Lock when app goes to background",
+                           subtitle: "Re-authenticate when returning to the app") {
+                    Toggle("", isOn: $lockOnBackground)
+                        .labelsHidden()
+                        .tint(.accentGold)
+                }
             }
-            .subtitle("Re-authenticate when returning to the app")
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 28)
+        .padding(.bottom, 32)
     }
 
     // MARK: - Capture Section
     private var captureSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Capture")
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "tray.and.arrow.down")
-                        .font(.system(size: 18))
-                        .foregroundColor(.accentGold)
-                        .frame(width: 28)
-                    Text("Default save location")
-                        .font(.cardTitle)
-                        .foregroundColor(.inkPrimary)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentGold.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "tray.and.arrow.down.fill")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.accentGold)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Default save location")
+                            .font(.cardTitle)
+                            .foregroundColor(.inkPrimary)
+                        Text("Where new notes are saved by default")
+                            .font(.cardCaption)
+                            .foregroundColor(.inkMuted)
+                    }
                 }
+                
                 Picker("", selection: $defaultSaveDrawer) {
                     Text("Ideas").tag("ideas")
                     Text("Work").tag("work")
@@ -162,114 +197,165 @@ struct SettingsScreen: View {
                 }
                 .pickerStyle(.segmented)
                 .tint(.accentGold)
-                Text("Fallback drawer when dismissing the save sheet without choosing.")
-                    .font(.cardCaption)
-                    .foregroundColor(.inkMuted)
             }
-            .padding(16)
-            .background(Color.cardSurface.opacity(0.7))
-            .cornerRadius(12)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.cardSurface)
+                    .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+            )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.borderMuted.opacity(0.3), lineWidth: 1)
             )
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 28)
+        .padding(.bottom, 32)
     }
 
     // MARK: - About Section
     private var aboutSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Help & About")
 
-            NavigationLink {
-                LegalPolicyScreen(policyType: .termsOfService)
-            } label: {
-                HStack(alignment: .center) {
-                    Image(systemName: "doc.text.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.accentGold)
-                        .frame(width: 28)
-                    Text("Terms of Service")
-                        .font(.cardTitle)
-                        .foregroundColor(.inkPrimary)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.inkMuted.opacity(0.4))
-                }
-                .padding(16)
-                .background(Color.cardSurface.opacity(0.7))
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-
-            NavigationLink {
-                LegalPolicyScreen(policyType: .privacyPolicy)
-            } label: {
-                HStack(alignment: .center) {
-                    Image(systemName: "hand.raised.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.accentGold)
-                        .frame(width: 28)
-                    Text("Privacy Policy")
-                        .font(.cardTitle)
-                        .foregroundColor(.inkPrimary)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.inkMuted.opacity(0.4))
-                }
-                .padding(16)
-                .background(Color.cardSurface.opacity(0.7))
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-
-            // Tutorial row
-            Button {
-                showTutorial = true
-            } label: {
-                HStack(alignment: .center) {
-                    Image(systemName: "book.pages.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.accentGold)
-                        .frame(width: 28)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("App Tutorial")
+            VStack(spacing: 12) {
+                NavigationLink {
+                    LegalPolicyScreen(policyType: .termsOfService)
+                } label: {
+                    HStack(alignment: .center, spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentGold.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "doc.text.fill")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.accentGold)
+                        }
+                        Text("Terms of Service")
                             .font(.cardTitle)
                             .foregroundColor(.inkPrimary)
-                        Text("Replay the guided tour of Vaulted")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.inkMuted.opacity(0.5))
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.cardSurface)
+                            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.borderMuted.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
+                    LegalPolicyScreen(policyType: .privacyPolicy)
+                } label: {
+                    HStack(alignment: .center, spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentGold.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.accentGold)
+                        }
+                        Text("Privacy Policy")
+                            .font(.cardTitle)
+                            .foregroundColor(.inkPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.inkMuted.opacity(0.5))
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.cardSurface)
+                            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.borderMuted.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                // Tutorial row
+                Button {
+                    showTutorial = true
+                } label: {
+                    HStack(alignment: .center, spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentGold.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "book.pages.fill")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.accentGold)
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("App Tutorial")
+                                .font(.cardTitle)
+                                .foregroundColor(.inkPrimary)
+                            Text("Replay the guided tour")
+                                .font(.cardCaption)
+                                .foregroundColor(.inkMuted)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.inkMuted.opacity(0.5))
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.cardSurface)
+                            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.borderMuted.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                // App info
+                HStack(alignment: .top, spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentGold.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.accentGold)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Vaulted")
+                            .font(.cardTitle)
+                            .foregroundColor(.inkPrimary)
+                        Text("Voice-first notes, organised by Ideas, Work & Journal")
                             .font(.cardCaption)
                             .foregroundColor(.inkMuted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.inkMuted.opacity(0.4))
                 }
                 .padding(16)
-                .background(Color.cardSurface.opacity(0.7))
-                .cornerRadius(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.cardSurface)
+                        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1)
+                )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.borderMuted.opacity(0.25), lineWidth: 1)
                 )
             }
-            .buttonStyle(.plain)
-
-            settingsRow(icon: "info.circle",
-                        title: "Vaulted",
-                        subtitle: "Voice-first notes, organised by Ideas, Work & Journal.")
         }
         .padding(.horizontal, 20)
         .fullScreenCover(isPresented: $showTutorial) {
@@ -282,41 +368,25 @@ struct SettingsScreen: View {
     // MARK: - Helpers
     private func sectionTitle(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
-            .foregroundColor(.inkMuted)
-            .tracking(0.8)
-            .padding(.bottom, 8)
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundColor(.inkMuted.opacity(0.8))
+            .tracking(1.2)
+            .padding(.bottom, 10)
+            .padding(.leading, 2)
     }
 
-    private func settingsRow<Trailing: View>(icon: String, title: String,
+    private func settingsRow<Trailing: View>(icon: String, title: String, subtitle: String,
                                              @ViewBuilder trailing: () -> Trailing) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(.accentGold)
-                .frame(width: 28)
-            Text(title)
-                .font(.cardTitle)
-                .foregroundColor(.inkPrimary)
-            Spacer()
-            trailing()
-        }
-        .padding(16)
-        .background(Color.cardSurface.opacity(0.7))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
-        )
-    }
-
-    private func settingsRow(icon: String, title: String, subtitle: String) -> some View {
-        HStack(alignment: .top) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(.accentGold)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentGold.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.accentGold)
+            }
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.cardTitle)
                     .foregroundColor(.inkPrimary)
@@ -325,13 +395,17 @@ struct SettingsScreen: View {
                     .foregroundColor(.inkMuted)
             }
             Spacer()
+            trailing()
         }
-        .padding(16)
-        .background(Color.cardSurface.opacity(0.7))
-        .cornerRadius(12)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.cardSurface)
+                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+        )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.borderMuted.opacity(0.4), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.borderMuted.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -349,25 +423,25 @@ private struct ThemeSwatch: View {
                 ZStack {
                     Circle()
                         .fill(style.theme.paperBackground)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 48, height: 48)
                         .overlay(
                             Circle()
-                                .stroke(isSelected ? style.theme.accentGold : style.theme.borderMuted,
-                                        lineWidth: isSelected ? 2.5 : 1)
+                                .stroke(isSelected ? style.theme.accentGold : style.theme.borderMuted.opacity(0.4),
+                                        lineWidth: isSelected ? 3 : 1.5)
                         )
                     Circle()
                         .fill(style.theme.accentGold)
-                        .frame(width: 20, height: 20)
+                        .frame(width: 22, height: 22)
 
                     if isSelected {
                         // Checkmark on accent circle
                         Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(style.theme.isDark ? .black : .white)
                     }
                 }
-                .shadow(color: style.theme.accentGold.opacity(isSelected ? 0.35 : 0),
-                        radius: 6, x: 0, y: 2)
+                .shadow(color: style.theme.accentGold.opacity(isSelected ? 0.4 : 0),
+                        radius: isSelected ? 8 : 0, x: 0, y: isSelected ? 3 : 0)
 
                 Text(style.theme.name)
                     .font(.system(size: 9, weight: isSelected ? .semibold : .regular, design: .rounded))
@@ -381,18 +455,6 @@ private struct ThemeSwatch: View {
     }
 }
 
-// MARK: - Subtitle helper
-private extension View {
-    func subtitle(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            self
-            Text(text)
-                .font(.cardCaption)
-                .foregroundColor(.inkMuted)
-                .padding(.leading, 36)
-        }
-    }
-}
 
 #Preview {
     NavigationStack { SettingsScreen() }

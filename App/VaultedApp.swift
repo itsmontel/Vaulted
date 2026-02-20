@@ -75,6 +75,7 @@ struct OnboardingOverlayModifier: ViewModifier {
 
 // MARK: - ContentView (Tab Navigation)
 struct ContentView: View {
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var selectedTab = 2  // Start on Capture (middle)
     @State private var ideasCount = 0
     @State private var workCount = 0
@@ -151,15 +152,15 @@ struct ContentView: View {
                 VStack(spacing: 4) {
                     ZStack {
                         Circle()
-                            .fill(selectedTab == 2 ? Color.accentGold : Color.inkMuted.opacity(0.2))
+                            .fill(selectedTab == 2 ? themeManager.theme.accentGold : themeManager.theme.inkMuted.opacity(0.2))
                             .frame(width: 56, height: 56)
                         Image(systemName: "mic.circle.fill")
                             .font(.system(size: 28, weight: .medium))
-                            .foregroundColor(selectedTab == 2 ? .white : .inkMuted)
+                            .foregroundColor(selectedTab == 2 ? (themeManager.theme.isDark ? themeManager.theme.inkPrimary : .white) : themeManager.theme.inkMuted)
                     }
                     Text("Capture")
                         .font(.system(size: 10, weight: selectedTab == 2 ? .semibold : .regular))
-                        .foregroundColor(selectedTab == 2 ? .accentGold : .inkMuted)
+                        .foregroundColor(selectedTab == 2 ? themeManager.theme.accentGold : themeManager.theme.inkMuted)
                 }
             }
             .buttonStyle(.plain)
@@ -169,12 +170,12 @@ struct ContentView: View {
         }
         .frame(height: 80)
         .background(
-            Color.paperBackground
-                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: -2)
+            themeManager.theme.paperBackground
+                .shadow(color: Color.black.opacity(themeManager.theme.isDark ? 0.3 : 0.1), radius: 8, x: 0, y: -2)
         )
         .overlay(
             Rectangle()
-                .fill(Color.borderMuted.opacity(0.3))
+                .fill(themeManager.theme.borderMuted.opacity(0.3))
                 .frame(height: 0.5),
             alignment: .top
         )
@@ -188,10 +189,10 @@ struct ContentView: View {
                 VStack(spacing: 4) {
                     Image(systemName: icon)
                         .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
-                        .foregroundColor(isSelected ? .accentGold : .inkMuted)
+                        .foregroundColor(isSelected ? themeManager.theme.accentGold : themeManager.theme.inkMuted)
                     Text(label)
                         .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
-                        .foregroundColor(isSelected ? .accentGold : .inkMuted)
+                        .foregroundColor(isSelected ? themeManager.theme.accentGold : themeManager.theme.inkMuted)
                 }
                 .frame(maxWidth: .infinity)
                 .scaleEffect(badgeAnimationTab == tag ? 1.18 : 1.0)
@@ -199,14 +200,14 @@ struct ContentView: View {
                 if let count = count, count > 0 {
                     Text("\(count)")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(themeManager.theme.isDark ? themeManager.theme.inkPrimary : .white)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
-                        .background(Color.accentGold)
+                        .background(themeManager.theme.accentGold)
                         .clipShape(Capsule())
                         .scaleEffect(badgeAnimationTab == tag ? 1.35 : 1.0)
                         .animation(.spring(response: 0.25, dampingFraction: 0.45), value: badgeAnimationTab)
-                        .offset(x: 4, y: -4)
+                        .offset(x: -8, y: -4)
                 }
             }
         }

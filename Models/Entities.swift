@@ -1,6 +1,18 @@
 import CoreData
 import Foundation
 
+// MARK: - TagEntity
+@objc(TagEntity)
+public class TagEntity: NSManagedObject {}
+
+extension TagEntity {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<TagEntity> {
+        NSFetchRequest<TagEntity>(entityName: "TagEntity")
+    }
+    @NSManaged public var name: String?
+    @NSManaged public var cards: NSSet?
+}
+
 // MARK: - DrawerEntity
 @objc(DrawerEntity)
 public class DrawerEntity: NSManagedObject {}
@@ -45,14 +57,24 @@ extension CardEntity {
     @NSManaged public var durationSec: Double
     @NSManaged public var createdAt: Date?
     @NSManaged public var updatedAt: Date?
+    @NSManaged public var reminderDate: Date?
     @NSManaged public var starred: Bool
     @NSManaged public var isLocked: Bool
-    @NSManaged public var tags: String?          // comma-separated
+    @NSManaged public var tags: String?          // legacy comma-separated; kept for search + migration
     @NSManaged public var drawer: DrawerEntity?
+    @NSManaged public var tagItems: NSSet?        // TagEntity many-to-many
 
     var tagList: [String] {
-        get { (tags ?? "").split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
-        set { tags = newValue.joined(separator: ",") }
+        get {
+            if let items = tagItems as? Set<TagEntity>, !items.isEmpty {
+                return items.compactMap { $0.name }.filter { !$0.isEmpty }.sorted()
+            }
+            return (tags ?? "").split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        }
+        set {
+            tags = newValue.joined(separator: ",")
+            // tagItems updated via CardRepository.syncTagItems(from:tags:)
+        }
     }
 
     var isVoice: Bool { type == "voice" }

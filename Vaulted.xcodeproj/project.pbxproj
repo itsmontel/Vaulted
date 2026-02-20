@@ -29,7 +29,6 @@
 		VA0101A10000000000000015 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000015 /* AppTheme.swift */; };
 		VA0101A10000000000000016 /* Vaulted.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = VA0101E10000000000000001 /* Vaulted.xcdatamodeld */; };
 		VA0101A10000000000000018 /* SpeechTranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000018 /* SpeechTranscriptionService.swift */; };
-		VA0101A20000000000000001 /* Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = VA0101B20000000000000001 /* Speech.framework */; };
 		VA0101A10000000000000019 /* NLTitleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000019 /* NLTitleGenerator.swift */; };
 		VA0101A1000000000000001A /* BookOpenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001A /* BookOpenView.swift */; };
 		VA0101A1000000000000001B /* GlobalSearchScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B1000000000000001B /* GlobalSearchScreen.swift */; };
@@ -41,9 +40,14 @@
 		VA0101A10000000000000021 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000021 /* PaywallView.swift */; };
 		VA0101A10000000000000022 /* PrivacyModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000022 /* PrivacyModalView.swift */; };
 		VA0101A10000000000000023 /* LegalPolicyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000023 /* LegalPolicyScreen.swift */; };
+		VA0101A10000000000000024 /* TranscriptBulletizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000026 /* TranscriptBulletizer.swift */; };
+		VA0101A10000000000000025 /* BulletizerComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000027 /* BulletizerComponents.swift */; };
+		VA0101A10000000000000029 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000029 /* ReminderService.swift */; };
+		VA0101A20000000000000001 /* Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = VA0101B20000000000000001 /* Speech.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8F78FFA22F4924E300E2BB67 /* Vaulted.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Vaulted.entitlements; sourceTree = "<group>"; };
 		VA0101B10000000000000001 /* Vaulted.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vaulted.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		VA0101B10000000000000002 /* VaultedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultedApp.swift; sourceTree = "<group>"; };
 		VA0101B10000000000000003 /* Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entities.swift; sourceTree = "<group>"; };
@@ -68,7 +72,6 @@
 		VA0101B10000000000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		VA0101B10000000000000017 /* Vaulted.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Vaulted.xcdatamodel; sourceTree = "<group>"; };
 		VA0101B10000000000000018 /* SpeechTranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranscriptionService.swift; sourceTree = "<group>"; };
-		VA0101B20000000000000001 /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
 		VA0101B10000000000000019 /* NLTitleGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLTitleGenerator.swift; sourceTree = "<group>"; };
 		VA0101B1000000000000001A /* BookOpenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookOpenView.swift; sourceTree = "<group>"; };
 		VA0101B1000000000000001B /* GlobalSearchScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchScreen.swift; sourceTree = "<group>"; };
@@ -81,6 +84,10 @@
 		VA0101B10000000000000022 /* PrivacyModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyModalView.swift; sourceTree = "<group>"; };
 		VA0101B10000000000000023 /* LegalPolicyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalPolicyScreen.swift; sourceTree = "<group>"; };
 		VA0101B10000000000000024 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
+		VA0101B10000000000000026 /* TranscriptBulletizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptBulletizer.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000027 /* BulletizerComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulletizerComponents.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000029 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
+		VA0101B20000000000000001 /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,9 +102,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8F78FFA12F49239C00E2BB67 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B20000000000000001 /* Speech.framework */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		VA0101D10000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				8F78FFA22F4924E300E2BB67 /* Vaulted.entitlements */,
 				VA0101B10000000000000024 /* Configuration.storekit */,
 				VA0101D10000000000000002 /* App */,
 				VA0101D10000000000000003 /* Models */,
@@ -108,6 +124,7 @@
 				VA0101D10000000000000008 /* Views */,
 				VA0101D10000000000000009 /* Theme */,
 				VA0101D1000000000000000A /* Products */,
+				8F78FFA12F49239C00E2BB67 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -144,42 +161,11 @@
 				VA0101D1000000000000000C /* Audio */,
 				VA0101D1000000000000000F /* Speech */,
 				VA0101D10000000000000020 /* Text */,
+				VA0101B10000000000000029 /* ReminderService.swift */,
 				VA0101D10000000000000021 /* Subscription */,
 				VA0101D10000000000000022 /* Onboarding */,
 			);
 			path = Services;
-			sourceTree = "<group>";
-		};
-		VA0101D10000000000000021 /* Subscription */ = {
-			isa = PBXGroup;
-			children = (
-				VA0101B1000000000000001E /* SubscriptionService.swift */,
-			);
-			path = Subscription;
-			sourceTree = "<group>";
-		};
-		VA0101D10000000000000022 /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				VA0101B1000000000000001F /* OnboardingManager.swift */,
-			);
-			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		VA0101D10000000000000020 /* Text */ = {
-			isa = PBXGroup;
-			children = (
-				VA0101B10000000000000019 /* NLTitleGenerator.swift */,
-			);
-			path = Text;
-			sourceTree = "<group>";
-		};
-		VA0101D1000000000000000F /* Speech */ = {
-			isa = PBXGroup;
-			children = (
-				VA0101B10000000000000018 /* SpeechTranscriptionService.swift */,
-			);
-			path = Speech;
 			sourceTree = "<group>";
 		};
 		VA0101D10000000000000006 /* Repositories */ = {
@@ -259,6 +245,7 @@
 		VA0101D1000000000000000E /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				VA0101B10000000000000027 /* BulletizerComponents.swift */,
 				VA0101B1000000000000000D /* AudioPlayerView.swift */,
 				VA0101B1000000000000000F /* BookshelfMonthView.swift */,
 				VA0101B1000000000000001A /* BookOpenView.swift */,
@@ -271,6 +258,39 @@
 				VA0101B1000000000000001D /* VaultedTutorialView.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		VA0101D1000000000000000F /* Speech */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000018 /* SpeechTranscriptionService.swift */,
+			);
+			path = Speech;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000020 /* Text */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000019 /* NLTitleGenerator.swift */,
+				VA0101B10000000000000026 /* TranscriptBulletizer.swift */,
+			);
+			path = Text;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000021 /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000001E /* SubscriptionService.swift */,
+			);
+			path = Subscription;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000022 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B1000000000000001F /* OnboardingManager.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -374,6 +394,9 @@
 				VA0101A10000000000000021 /* PaywallView.swift in Sources */,
 				VA0101A10000000000000022 /* PrivacyModalView.swift in Sources */,
 				VA0101A10000000000000023 /* LegalPolicyScreen.swift in Sources */,
+				VA0101A10000000000000024 /* TranscriptBulletizer.swift in Sources */,
+				VA0101A10000000000000025 /* BulletizerComponents.swift in Sources */,
+				VA0101A10000000000000029 /* ReminderService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,6 +520,7 @@
 		VA0103010000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Vaulted.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -527,6 +551,7 @@
 		VA0103010000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Vaulted.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";

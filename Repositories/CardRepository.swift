@@ -33,6 +33,7 @@ final class CardRepository {
         card.tags = tags
         card.drawer = drawer
         pc.save()
+        syncTagItems(for: card, tagNames: (tags.isEmpty ? [] : (tags.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty })))
         return card
     }
 
@@ -57,6 +58,7 @@ final class CardRepository {
         card.tags = tags
         card.drawer = drawer
         pc.save()
+        syncTagItems(for: card, tagNames: (tags.isEmpty ? [] : (tags.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty })))
         return card
     }
 
@@ -115,9 +117,54 @@ final class CardRepository {
         }
         if let s = snippet { card.snippet = String(s.prefix(200)) }
         if let tc = typedCopy { card.typedCopy = tc }
-        if let tg = tags { card.tags = tg }
+        if let tg = tags {
+            card.tags = tg
+            let names = tg.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            syncTagItems(for: card, tagNames: names)
+        }
         card.updatedAt = Date()
         pc.save()
+    }
+
+    // MARK: - Tag entity sync (many-to-many)
+    private func fetchOrCreateTag(name: String) -> TagEntity {
+        let req: NSFetchRequest<TagEntity> = TagEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "name ==[cd] %@", name)
+        req.fetchLimit = 1
+        if let existing = try? context.fetch(req).first { return existing }
+        let tag = TagEntity(context: context)
+        tag.name = name
+        return tag
+    }
+
+    func syncTagItems(for card: CardEntity, tagNames: [String]) {
+        let tagEntities = tagNames.map { fetchOrCreateTag(name: $0) }
+        card.tagItems = NSSet(array: tagEntities)
+        pc.save()
+    }
+
+    // MARK: - Reminder
+    func setReminder(_ card: CardEntity, date: Date?) {
+        let cardId = card.uuid?.uuidString ?? card.objectID.uriRepresentation().absoluteString
+        ReminderService.shared.cancelReminder(cardId: cardId)
+
+        card.reminderDate = date
+        card.updatedAt = Date()
+        pc.save()
+
+        if let d = date {
+            Task {
+                await ReminderService.shared.scheduleReminder(
+                    cardId: cardId,
+                    title: card.title ?? "Note",
+                    date: d
+                )
+            }
+        }
+    }
+
+    func clearReminder(_ card: CardEntity) {
+        setReminder(card, date: nil)
     }
 
     // MARK: - Lock / unlock card
@@ -127,8 +174,10 @@ final class CardRepository {
         pc.save()
     }
 
-    // MARK: - Delete card (removes audio file too)
+    // MARK: - Delete card (removes audio file too, cancels reminder)
     func delete(_ card: CardEntity) {
+        let cardId = card.uuid?.uuidString ?? card.objectID.uriRepresentation().absoluteString
+        ReminderService.shared.cancelReminder(cardId: cardId)
         if let url = card.audioURL {
             try? FileManager.default.removeItem(at: url)
         }

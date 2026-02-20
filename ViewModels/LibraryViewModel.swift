@@ -5,23 +5,23 @@ import Foundation
 
 // MARK: - Library View Mode
 enum LibraryViewMode: String, CaseIterable {
-    case drawer = "Drawers"
-    case shelf  = "Bookshelf"
     case stack  = "Stack"
+    case shelf  = "Bookshelf"
+    case drawer = "Drawers"
 
     var systemImage: String {
         switch self {
-        case .drawer: return "archivebox"
-        case .shelf:  return "books.vertical"
         case .stack:  return "square.stack"
+        case .shelf:  return "books.vertical"
+        case .drawer: return "archivebox"
         }
     }
 }
 
-// MARK: - Bookshelf chronological pattern (weekly / daily / monthly)
+// MARK: - Chronological period for Stack, Bookshelf, and Drawers (display order: Daily, Weekly, Monthly; default: Weekly)
 enum BookshelfPeriod: String, CaseIterable {
-    case weekly  = "Weekly"
     case daily   = "Daily"
+    case weekly  = "Weekly"
     case monthly = "Monthly"
 }
 
@@ -64,6 +64,11 @@ final class LibraryViewModel: ObservableObject {
             .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.reloadCards() }
+            .store(in: &cancellables)
+
+        securityService.$isPrivateUnlocked
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in self?.isPrivateUnlocked = value }
             .store(in: &cancellables)
     }
 
@@ -196,18 +201,42 @@ final class LibraryViewModel: ObservableObject {
     /// Bookshelf spines: one entry per period (week/day/month) for current bookshelfPeriod.
     var groupedForBookshelf: [(label: String, cards: [CardEntity])] {
         switch bookshelfPeriod {
-        case .weekly:  return groupedByWeek
         case .daily:   return groupedByDay
+        case .weekly:  return groupedByWeek
         case .monthly: return groupedByMonth
         }
     }
 
-    // MARK: - Unlock private drawer
+    /// Stack view groups by period (Today/Yesterday/This Week/Earlier for weekly; by day/week/month otherwise).
+    var groupedForStack: [(label: String, cards: [CardEntity])] {
+        switch bookshelfPeriod {
+        case .daily:   return groupedByDay
+        case .weekly:  return groupedByTime
+        case .monthly: return groupedByMonth
+        }
+    }
+
+    /// Drawers view groups by period.
+    var groupedForDrawers: [(label: String, cards: [CardEntity])] {
+        switch bookshelfPeriod {
+        case .daily:   return groupedByDay
+        case .weekly:  return groupedByWeek
+        case .monthly: return groupedByMonth
+        }
+    }
+
+    // MARK: - Lock / unlock
     func unlockPrivate() async -> Bool {
         let success = await securityService.authenticateAndUnlock()
         isPrivateUnlocked = success
         if success { load() }
         return success
+    }
+
+    func lockPrivate() {
+        securityService.lockPrivateDrawer()
+        isPrivateUnlocked = false
+        reloadCards()
     }
 
     func toggleStar(_ card: CardEntity) {

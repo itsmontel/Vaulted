@@ -45,56 +45,56 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
             return VaultedTheme(
                 name: "Midnight",
                 icon: "moon.stars.fill",
-                paperBackground: Color(hex: "#0A0E14"),
-                cardSurface:     Color(hex: "#131920"),
-                borderMuted:     Color(hex: "#2B333D"),
-                inkPrimary:      Color(hex: "#E8EDF4"),
-                inkMuted:        Color(hex: "#7D8A9A"),
-                accentGold:      Color(hex: "#5C9EFF"),
-                lockedBrown:     Color(hex: "#364559"),
-                drawerHandle:    Color(hex: "#4A9EFF"),
+                paperBackground: Color(hex: "#0D1117"),
+                cardSurface:     Color(hex: "#161B22"),
+                borderMuted:     Color(hex: "#30363D"),
+                inkPrimary:      Color(hex: "#F0F3F6"),
+                inkMuted:        Color(hex: "#8B949E"),
+                accentGold:      Color(hex: "#58A6FF"),
+                lockedBrown:     Color(hex: "#21262D"),
+                drawerHandle:    Color(hex: "#6CB6FF"),
                 isDark: true
             )
         case .forest:
             return VaultedTheme(
                 name: "Forest",
                 icon: "leaf.fill",
-                paperBackground: Color(hex: "#0B1612"),
-                cardSurface:     Color(hex: "#132118"),
-                borderMuted:     Color(hex: "#2A4538"),
-                inkPrimary:      Color(hex: "#D8ECD4"),
-                inkMuted:        Color(hex: "#6B9B7A"),
-                accentGold:      Color(hex: "#4DD68C"),
-                lockedBrown:     Color(hex: "#2E5240"),
-                drawerHandle:    Color(hex: "#52C78A"),
+                paperBackground: Color(hex: "#0F1A14"),
+                cardSurface:     Color(hex: "#16231C"),
+                borderMuted:     Color(hex: "#2D4A3A"),
+                inkPrimary:      Color(hex: "#E0F2E4"),
+                inkMuted:        Color(hex: "#7FA68A"),
+                accentGold:      Color(hex: "#56C896"),
+                lockedBrown:     Color(hex: "#1E3A2B"),
+                drawerHandle:    Color(hex: "#6DD4A3"),
                 isDark: true
             )
         case .rose:
             return VaultedTheme(
                 name: "Rose",
                 icon: "heart.fill",
-                paperBackground: Color(hex: "#FCE8EC"),
-                cardSurface:     Color(hex: "#FFF5F7"),
-                borderMuted:     Color(hex: "#E4BCC6"),
-                inkPrimary:      Color(hex: "#2A1820"),
-                inkMuted:        Color(hex: "#7D5A66"),
-                accentGold:      Color(hex: "#B84D6A"),
-                lockedBrown:     Color(hex: "#6E3348"),
-                drawerHandle:    Color(hex: "#C96A82"),
+                paperBackground: Color(hex: "#FDF2F5"),
+                cardSurface:     Color(hex: "#FFFBFD"),
+                borderMuted:     Color(hex: "#E8D1D8"),
+                inkPrimary:      Color(hex: "#2D1B22"),
+                inkMuted:        Color(hex: "#8B6B77"),
+                accentGold:      Color(hex: "#D94A6B"),
+                lockedBrown:     Color(hex: "#B87A8F"),
+                drawerHandle:    Color(hex: "#E06B8A"),
                 isDark: false
             )
         case .slate:
             return VaultedTheme(
                 name: "Slate",
                 icon: "cloud.fill",
-                paperBackground: Color(hex: "#161A20"),
-                cardSurface:     Color(hex: "#1E232B"),
-                borderMuted:     Color(hex: "#363D48"),
-                inkPrimary:      Color(hex: "#E8EAEF"),
-                inkMuted:        Color(hex: "#7A8498"),
-                accentGold:      Color(hex: "#9B7DF5"),
-                lockedBrown:     Color(hex: "#453A65"),
-                drawerHandle:    Color(hex: "#8B73E8"),
+                paperBackground: Color(hex: "#1A1D24"),
+                cardSurface:     Color(hex: "#23262E"),
+                borderMuted:     Color(hex: "#3A3F4A"),
+                inkPrimary:      Color(hex: "#E8EAED"),
+                inkMuted:        Color(hex: "#8B9199"),
+                accentGold:      Color(hex: "#A78BFA"),
+                lockedBrown:     Color(hex: "#2D2F3A"),
+                drawerHandle:    Color(hex: "#B89DFB"),
                 isDark: true
             )
         }

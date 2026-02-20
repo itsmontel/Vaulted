@@ -28,7 +28,16 @@
         <attribute name="typedCopy" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="reminderDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="drawer" optional="YES" maxCount="1" deletionRule="Nullify"
                       destinationEntity="DrawerEntity" inverseName="cards" inverseEntity="DrawerEntity"/>
+        <relationship name="tagItems" optional="YES" toMany="YES" deletionRule="Nullify"
+                      destinationEntity="TagEntity" inverseName="cards" inverseEntity="TagEntity"/>
+    </entity>
+
+    <entity name="TagEntity" representedClassName="TagEntity" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="cards" optional="YES" toMany="YES" deletionRule="Nullify"
+                      destinationEntity="CardEntity" inverseName="tagItems" inverseEntity="CardEntity"/>
     </entity>
 </model>

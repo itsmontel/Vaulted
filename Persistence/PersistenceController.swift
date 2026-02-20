@@ -23,6 +23,26 @@ final class PersistenceController {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
         seedDefaultDrawersIfNeeded()
+        migrateTagsToTagEntitiesIfNeeded()
+    }
+
+    // MARK: - One-time migration: populate tagItems from tags string
+    private func migrateTagsToTagEntitiesIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: "Vaulted.didMigrateTagItems") else { return }
+        let ctx = container.viewContext
+        let req: NSFetchRequest<CardEntity> = CardEntity.fetchRequest()
+        guard let cards = try? ctx.fetch(req) else { return }
+        let cardRepo = CardRepository(pc: self)
+        for card in cards {
+            let tagStr = card.tags ?? ""
+            if tagStr.isEmpty { continue }
+            let count = (card.tagItems as? Set<TagEntity>)?.count ?? 0
+            if count > 0 { continue }
+            let names = tagStr.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            if names.isEmpty { continue }
+            cardRepo.syncTagItems(for: card, tagNames: names)
+        }
+        UserDefaults.standard.set(true, forKey: "Vaulted.didMigrateTagItems")
     }
 
     var viewContext: NSManagedObjectContext { container.viewContext }

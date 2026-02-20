@@ -51,9 +51,8 @@ final class AudioService: NSObject, ObservableObject {
         guard permissionGranted == true else { throw AudioError.permissionDenied }
 
         let session = AVAudioSession.sharedInstance()
-        // Use measurement mode for better speech recognition accuracy
-        // This reduces automatic gain control and noise reduction that can interfere with recognition
-        try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+        // Voice chat mode enables automatic gain control for louder, clearer voice notes
+        try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
         try session.setActive(true)
         
         // Set preferred sample rate for speech recognition
@@ -208,6 +207,63 @@ final class AudioService: NSObject, ObservableObject {
         playbackTimer?.invalidate()
         playbackTimer = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    // MARK: - Playback waveform (precomputed from file)
+    /// Load normalized amplitude samples (e.g. 60 bars) for waveform display. Runs off main thread.
+    static func loadPlaybackWaveformSamples(from url: URL, barCount: Int = 60) async -> [Float] {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let result = AudioWaveformHelper.computeWaveformSamples(from: url, barCount: barCount)
+                continuation.resume(returning: result)
+            }
+        }
+    }
+}
+
+// MARK: - Audio waveform helper (runs off main actor)
+private enum AudioWaveformHelper {
+    static func computeWaveformSamples(from url: URL, barCount: Int) -> [Float] {
+        guard let file = try? AVAudioFile(forReading: url) else { return [] }
+        let frameCount = AVAudioFrameCount(file.length)
+        guard frameCount > 0 else { return [] }
+        let format = file.processingFormat
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return [] }
+        guard (try? file.read(into: buffer)) != nil else { return [] }
+
+        let channelCount = Int(format.channelCount)
+        let frames = Int(buffer.frameLength)
+        guard frames > 0, channelCount > 0 else { return [] }
+
+        var samples: [Float] = []
+        if let channelData = buffer.floatChannelData {
+            for f in 0..<frames {
+                var sum: Float = 0
+                for c in 0..<channelCount { sum += abs(channelData[c][f]) }
+                samples.append(sum / Float(channelCount))
+            }
+        } else if let channelData = buffer.int16ChannelData {
+            let scale: Float = 1 / 32768
+            for f in 0..<frames {
+                var sum: Float = 0
+                for c in 0..<channelCount { sum += abs(Float(channelData[c][f]) * scale) }
+                samples.append(sum / Float(channelCount))
+            }
+        } else { return [] }
+
+        let step = max(1, samples.count / barCount)
+        var bars: [Float] = []
+        for i in 0..<barCount {
+            let start = i * step
+            let end = min(start + step, samples.count)
+            guard start < end else { bars.append(0); continue }
+            let slice = samples[start..<end]
+            let avg = slice.reduce(0, +) / Float(slice.count)
+            bars.append(avg)
+        }
+        let maxVal = bars.max() ?? 1
+        if maxVal > 0 { bars = bars.map { $0 / maxVal } }
+        return bars
     }
 }
 

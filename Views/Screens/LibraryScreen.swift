@@ -260,13 +260,14 @@ private struct LibraryScreenContent: View {
     // MARK: - Content area
     @ViewBuilder
     private var contentArea: some View {
+        let lockContentByDefault = (UserDefaults.standard.object(forKey: "Vaulted.lockContentByDefault") as? Bool) ?? true
         switch vm.viewMode {
         case .stack:
-            TimelineStackView(vm: vm, selectedCard: authWrappedSelectedCard)
+            TimelineStackView(vm: vm, selectedCard: authWrappedSelectedCard, showLockIndicator: lockContentByDefault || drawerKey == "private")
         case .drawer:
-            DrawerCabinetView(vm: vm, selectedCard: authWrappedSelectedCard)
+            DrawerCabinetView(vm: vm, selectedCard: authWrappedSelectedCard, showLockIndicator: lockContentByDefault || drawerKey == "private")
         case .shelf:
-            BookshelfMonthView(vm: vm, selectedCard: authWrappedSelectedCard)
+            BookshelfMonthView(vm: vm, selectedCard: authWrappedSelectedCard, showLockIndicator: lockContentByDefault || drawerKey == "private")
         }
     }
 

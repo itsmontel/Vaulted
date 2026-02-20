@@ -7,6 +7,7 @@ struct CardDetailScreen: View {
     @StateObject private var vm: CardDetailViewModel
     @State private var showDrawerPicker = false
     @State private var showTagEditor = false
+    @State private var showReminderPicker = false
     @State private var showDeleteConfirm = false
     @State private var regenerateTitleToast: String?
     @Environment(\.dismiss) private var dismiss
@@ -45,6 +46,13 @@ struct CardDetailScreen: View {
                         Image(systemName: "trash")
                             .foregroundColor(.red.opacity(0.7))
                     }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .foregroundColor(.accentGold)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -104,6 +112,20 @@ struct CardDetailScreen: View {
                     vm.saveTags()
                     showTagEditor = false
                 }
+            }
+            .sheet(isPresented: $showReminderPicker) {
+                ReminderPickerSheet(
+                    currentReminder: card.reminderDate,
+                    onSave: { date in
+                        vm.setReminder(date)
+                        showReminderPicker = false
+                    },
+                    onClear: {
+                        vm.setReminder(nil)
+                        showReminderPicker = false
+                    },
+                    onCancel: { showReminderPicker = false }
+                )
             }
         }
     }
@@ -173,6 +195,7 @@ struct CardDetailScreen: View {
             }
             .padding(20)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Transcribed note (voice cards; below audio player)
@@ -189,7 +212,7 @@ struct CardDetailScreen: View {
                 .foregroundColor(.inkPrimary)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
-                .frame(minHeight: 120)
+                .frame(minHeight: 240, maxHeight: 500)
                 .onChange(of: vm.editingTypedCopy) { _ in vm.saveTypedCopy() }
         }
         .padding(16)
@@ -288,6 +311,12 @@ struct CardDetailScreen: View {
                 showTagEditor = true
             }
             Divider().frame(height: 36)
+            actionButton(icon: card.reminderDate != nil ? "bell.fill" : "bell",
+                         label: "Remind",
+                         color: card.reminderDate != nil ? .accentGold : .inkMuted) {
+                showReminderPicker = true
+            }
+            Divider().frame(height: 36)
             actionButton(icon: "lock", label: "Private", color: .inkMuted) {
                 Task { await vm.moveToPrivate() }
             }
@@ -344,6 +373,18 @@ struct CardDetailScreen: View {
                         .foregroundColor(.inkMuted)
                 }
             }
+
+            if let reminder = card.reminderDate {
+                HStack {
+                    Label("Reminder", systemImage: "bell.fill")
+                        .font(.cardCaption)
+                        .foregroundColor(.accentGold)
+                    Spacer()
+                    Text(formatReminderDate(reminder))
+                        .font(.cardCaption)
+                        .foregroundColor(.inkMuted)
+                }
+            }
         }
         .padding(16)
         .background(Color.cardSurface)
@@ -360,6 +401,89 @@ struct CardDetailScreen: View {
     private func formatDuration(_ secs: Double) -> String {
         let s = Int(secs)
         return String(format: "%d:%02d", s / 60, s % 60)
+    }
+
+    private func formatReminderDate(_ d: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(d) {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "h:mm a"
+            return "Today at \(fmt.string(from: d))"
+        }
+        if cal.isDateInTomorrow(d) {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "h:mm a"
+            return "Tomorrow at \(fmt.string(from: d))"
+        }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MMM d, yyyy · h:mm a"
+        return fmt.string(from: d)
+    }
+}
+
+// MARK: - ReminderPickerSheet
+struct ReminderPickerSheet: View {
+    let currentReminder: Date?
+    var onSave: (Date) -> Void
+    var onClear: () -> Void
+    var onCancel: () -> Void
+
+    @State private var selectedDate: Date
+    @Environment(\.dismiss) private var dismiss
+
+    init(currentReminder: Date?, onSave: @escaping (Date) -> Void, onClear: @escaping () -> Void, onCancel: @escaping () -> Void) {
+        self.currentReminder = currentReminder
+        self.onSave = onSave
+        self.onClear = onClear
+        self.onCancel = onCancel
+        _selectedDate = State(initialValue: currentReminder ?? Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date())
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                DatePicker("Remind me", selection: $selectedDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.graphical)
+                    .padding()
+                    .background(Color.cardSurface)
+                    .cornerRadius(12)
+
+                if currentReminder != nil {
+                    Button {
+                        onClear()
+                        dismiss()
+                    } label: {
+                        Label("Clear Reminder", systemImage: "bell.slash")
+                            .font(.cardBody)
+                            .foregroundColor(.red)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
+                Spacer()
+            }
+            .padding(20)
+            .background(Color.paperBackground)
+            .navigationTitle("Set Reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onCancel()
+                        dismiss()
+                    }
+                    .foregroundColor(.inkMuted)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(selectedDate)
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.accentGold)
+                }
+            }
+        }
     }
 }
 
