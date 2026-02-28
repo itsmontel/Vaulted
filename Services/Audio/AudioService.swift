@@ -102,8 +102,8 @@ final class AudioService: NSObject, ObservableObject {
         guard let recorder = recorder, recorder.isRecording else { return }
         recorder.updateMeters()
         let power = recorder.averagePower(forChannel: 0)
-        // dB: roughly -160 (silence) to 0 (clip). Map to 0...1 with soft curve.
-        let normalized = max(0, min(1, (power + 55) / 55))
+        // dB: -160 (silence) to 0 (clip). Map to 0...1 linearly so the UI can emphasize loud peaks.
+        let normalized = max(0, min(1, Float((power + 55) / 55)))
         recordingLevel = normalized
         recordingElapsed = recorder.currentTime
         recordingLevels.append(normalized)

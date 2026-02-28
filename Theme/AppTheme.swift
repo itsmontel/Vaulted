@@ -9,6 +9,7 @@ struct VaultedTheme {
     let borderMuted: Color
     let inkPrimary: Color
     let inkMuted: Color
+    let placeholderColor: Color  // Brighter than inkMuted for dark themes; ensures placeholders and secondary text are readable
     let accentGold: Color
     let lockedBrown: Color
     let drawerHandle: Color
@@ -36,6 +37,7 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
                 borderMuted:     Color(hex: "#D6CAB7"),
                 inkPrimary:      Color(hex: "#211E1C"),
                 inkMuted:        Color(hex: "#70675E"),
+                placeholderColor: Color(hex: "#8B8478"),
                 accentGold:      Color(hex: "#C49245"),
                 lockedBrown:     Color(hex: "#7B5C3A"),
                 drawerHandle:    Color(hex: "#A8946F"),
@@ -49,7 +51,8 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
                 cardSurface:     Color(hex: "#161B22"),
                 borderMuted:     Color(hex: "#30363D"),
                 inkPrimary:      Color(hex: "#F0F3F6"),
-                inkMuted:        Color(hex: "#8B949E"),
+                inkMuted:        Color(hex: "#B1BAC4"),
+                placeholderColor: Color(hex: "#8B949E"),
                 accentGold:      Color(hex: "#58A6FF"),
                 lockedBrown:     Color(hex: "#21262D"),
                 drawerHandle:    Color(hex: "#6CB6FF"),
@@ -63,7 +66,8 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
                 cardSurface:     Color(hex: "#16231C"),
                 borderMuted:     Color(hex: "#2D4A3A"),
                 inkPrimary:      Color(hex: "#E0F2E4"),
-                inkMuted:        Color(hex: "#7FA68A"),
+                inkMuted:        Color(hex: "#A0C4A8"),
+                placeholderColor: Color(hex: "#7FA68A"),
                 accentGold:      Color(hex: "#56C896"),
                 lockedBrown:     Color(hex: "#1E3A2B"),
                 drawerHandle:    Color(hex: "#6DD4A3"),
@@ -78,6 +82,7 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
                 borderMuted:     Color(hex: "#E8D1D8"),
                 inkPrimary:      Color(hex: "#2D1B22"),
                 inkMuted:        Color(hex: "#8B6B77"),
+                placeholderColor: Color(hex: "#A67F8A"),
                 accentGold:      Color(hex: "#D94A6B"),
                 lockedBrown:     Color(hex: "#B87A8F"),
                 drawerHandle:    Color(hex: "#E06B8A"),
@@ -91,7 +96,8 @@ enum AppThemeStyle: String, CaseIterable, Identifiable {
                 cardSurface:     Color(hex: "#23262E"),
                 borderMuted:     Color(hex: "#3A3F4A"),
                 inkPrimary:      Color(hex: "#E8EAED"),
-                inkMuted:        Color(hex: "#8B9199"),
+                inkMuted:        Color(hex: "#ADB3BB"),
+                placeholderColor: Color(hex: "#8B9199"),
                 accentGold:      Color(hex: "#A78BFA"),
                 lockedBrown:     Color(hex: "#2D2F3A"),
                 drawerHandle:    Color(hex: "#B89DFB"),
@@ -124,6 +130,7 @@ extension Color {
     static var borderMuted:     Color { ThemeManager.shared.theme.borderMuted }
     static var inkPrimary:      Color { ThemeManager.shared.theme.inkPrimary }
     static var inkMuted:        Color { ThemeManager.shared.theme.inkMuted }
+    static var placeholderColor: Color { ThemeManager.shared.theme.placeholderColor }
     static var accentGold:      Color { ThemeManager.shared.theme.accentGold }
     static var lockedBrown:     Color { ThemeManager.shared.theme.lockedBrown }
     static var drawerHandle:    Color { ThemeManager.shared.theme.drawerHandle }

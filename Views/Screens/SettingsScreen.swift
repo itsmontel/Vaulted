@@ -30,7 +30,6 @@ struct SettingsScreen: View {
     @AppStorage("Vaulted.defaultSaveDrawer")    private var defaultSaveDrawer = "ideas"
 
     @ObservedObject private var themeManager = ThemeManager.shared
-    @State private var showTutorial = false
 
     var body: some View {
         ZStack {
@@ -285,29 +284,31 @@ struct SettingsScreen: View {
                 }
                 .buttonStyle(.plain)
 
-                // Tutorial row
+                // Manage Subscription
                 Button {
-                    showTutorial = true
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        UIApplication.shared.open(url)
+                    }
                 } label: {
                     HStack(alignment: .center, spacing: 12) {
                         ZStack {
                             Circle()
                                 .fill(Color.accentGold.opacity(0.15))
                                 .frame(width: 40, height: 40)
-                            Image(systemName: "book.pages.fill")
+                            Image(systemName: "creditcard.fill")
                                 .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(.accentGold)
                         }
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("App Tutorial")
+                            Text("Manage Subscription")
                                 .font(.cardTitle)
                                 .foregroundColor(.inkPrimary)
-                            Text("Replay the guided tour")
+                            Text("View or cancel your subscription")
                                 .font(.cardCaption)
                                 .foregroundColor(.inkMuted)
                         }
                         Spacer()
-                        Image(systemName: "chevron.right")
+                        Image(systemName: "arrow.up.right")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.inkMuted.opacity(0.5))
                     }
@@ -358,11 +359,6 @@ struct SettingsScreen: View {
             }
         }
         .padding(.horizontal, 20)
-        .fullScreenCover(isPresented: $showTutorial) {
-            VaultedTutorialOverlay(manager: VaultedTutorialManager.shared)
-                .onAppear { VaultedTutorialManager.shared.start(isOnboarding: false) }
-                .ignoresSafeArea()
-        }
     }
 
     // MARK: - Helpers

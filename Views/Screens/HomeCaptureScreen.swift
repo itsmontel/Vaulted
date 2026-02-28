@@ -38,11 +38,13 @@ private struct HomeCaptureScreenBody: View {
     @ObservedObject var audioService: AudioService
     @ObservedObject private var onboarding = OnboardingManager.shared
     @ObservedObject private var tutorialManager = VaultedTutorialManager.shared
+    @ObservedObject private var dailyPromptService = DailyPromptService.shared
     @Binding var showTextComposer: Bool
     @Binding var recordButtonScale: CGFloat
     @Binding var outerPulse: CGFloat
     @State private var showSearch = false
     @State private var micPulseScale: CGFloat = 1.0
+    @State private var showStreakCelebration = false
 
     var body: some View {
         ZStack {
@@ -80,6 +82,22 @@ private struct HomeCaptureScreenBody: View {
                     drawerLabel: vm.animationDrawerLabel
                 )
                 .transition(.asymmetric(insertion: .opacity, removal: .opacity))
+            }
+            
+            // Streak celebration overlay
+            if showStreakCelebration {
+                streakCelebrationOverlay
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
+        }
+        .onChange(of: dailyPromptService.answeredToday) { answered in
+            if answered && dailyPromptService.currentStreak > 0 {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    showStreakCelebration = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation { showStreakCelebration = false }
+                }
             }
         }
         .sheet(isPresented: $showTextComposer, onDismiss: {
@@ -261,7 +279,12 @@ private struct HomeCaptureScreenBody: View {
 
     // MARK: - Main button area
     private var mainButtonArea: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
+            // Daily Prompt Card (only in voice mode, not during onboarding)
+            if vm.mode == .voice && !onboarding.shouldShowMicPrompt && !tutorialManager.isActive {
+                dailyPromptCard
+            }
+            
             if vm.mode == .voice {
                 voiceRecordButton
                 if onboarding.shouldShowMicPrompt {
@@ -280,10 +303,177 @@ private struct HomeCaptureScreenBody: View {
                     micPulseScale = 1.05
                 }
             }
+            dailyPromptService.refreshTodaysPrompt()
         }
         .onChange(of: onboarding.shouldShowMicPrompt) { show in
             if !show { micPulseScale = 1.0 }
         }
+    }
+    
+    // MARK: - Daily Prompt Card
+    private var dailyPromptCard: some View {
+        let prompt = dailyPromptService.todaysPrompt
+        let answered = dailyPromptService.answeredToday
+        let streak = dailyPromptService.currentStreak
+        
+        return VStack(spacing: 0) {
+            // Header: Category + Streak
+            HStack {
+                HStack(spacing: 6) {
+                    Image(systemName: prompt.category.icon)
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Daily \(prompt.category.displayName)")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                }
+                .foregroundColor(.accentGold)
+                
+                Spacer()
+                
+                if streak > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 11))
+                        Text("\(streak)")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                    }
+                    .foregroundColor(streak >= 7 ? .orange : .inkMuted)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            
+            // Prompt Text
+            Text(prompt.text)
+                .font(.system(size: 15, weight: .medium, design: .serif))
+                .foregroundColor(.inkPrimary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+            
+            // Action row: View Answer (when answered) or Tap to answer (when not)
+            HStack(spacing: 12) {
+                if answered {
+                    Button {
+                        viewDailyPromptAnswer()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 14))
+                            Text("View Answer")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundColor(.accentGold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.accentGold.opacity(0.15))
+                        .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button {
+                    if !answered {
+                        startDailyPromptRecording()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if answered {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Answered today")
+                                .font(.system(size: 13, weight: .medium))
+                        } else {
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 14))
+                            Text("Tap to answer")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(answered ? .inkMuted : .white)
+                    .frame(maxWidth: answered ? .infinity : nil)
+                    .padding(.horizontal, answered ? 0 : 20)
+                    .padding(.vertical, 10)
+                    .background(answered ? Color.borderMuted.opacity(0.3) : Color.accentGold)
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+                .disabled(answered)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+        }
+        .background(Color.cardSurface)
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(answered ? Color.borderMuted.opacity(0.5) : Color.accentGold.opacity(0.4), lineWidth: 1)
+        )
+        .shadow(color: .inkPrimary.opacity(0.06), radius: 8, x: 0, y: 3)
+        .padding(.horizontal, 8)
+        .opacity(answered ? 0.85 : 1)
+    }
+    
+    private func startDailyPromptRecording() {
+        let prompt = dailyPromptService.todaysPrompt
+        vm.beginDailyPromptRecording(category: prompt.category, promptText: prompt.text)
+    }
+    
+    private func viewDailyPromptAnswer() {
+        guard let cardId = dailyPromptService.lastSavedCardId,
+              let drawerKey = dailyPromptService.lastSavedDrawerKey else { return }
+        NotificationCenter.default.post(
+            name: .vaultedOpenCard,
+            object: nil,
+            userInfo: ["drawerKey": drawerKey, "cardId": cardId]
+        )
+    }
+    
+    // MARK: - Streak Celebration Overlay
+    private var streakCelebrationOverlay: some View {
+        let streak = dailyPromptService.currentStreak
+        let message: String
+        let icon: String
+        
+        if streak == 1 {
+            message = "First day! Keep it going"
+            icon = "sparkles"
+        } else if streak == 7 {
+            message = "1 week streak!"
+            icon = "flame.fill"
+        } else if streak == 30 {
+            message = "30 day streak!"
+            icon = "trophy.fill"
+        } else if streak % 7 == 0 {
+            message = "\(streak / 7) week streak!"
+            icon = "flame.fill"
+        } else {
+            message = "\(streak) day streak!"
+            icon = "flame.fill"
+        }
+        
+        return VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 36))
+                .foregroundColor(.accentGold)
+            Text(message)
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundColor(.inkPrimary)
+            Text("Daily prompt answered")
+                .font(.system(size: 14))
+                .foregroundColor(.inkMuted)
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 24)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.cardSurface)
+                .shadow(color: .inkPrimary.opacity(0.15), radius: 20, x: 0, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.accentGold.opacity(0.3), lineWidth: 1)
+        )
     }
 
     // MARK: - Tap to Record button
@@ -372,6 +562,13 @@ struct RecordingWaveformView: View {
     private let minBarHeight: CGFloat = 4
     private let maxBarHeight: CGFloat = 48
 
+    /// Quiet levels stay similar; loud levels get much higher bars (up to ~2x).
+    private static func emphasizePeaks(_ raw: CGFloat) -> CGFloat {
+        if raw <= 0.25 { return raw }
+        let t = (raw - 0.25) / 0.75
+        return 0.25 + t * 1.75
+    }
+
     /// Last barCount levels (newest on the right); padded with 0 on the left when recording just started.
     private var displayLevels: [Float] {
         let suffix = Array(levels.suffix(barCount))
@@ -395,11 +592,12 @@ struct RecordingWaveformView: View {
                             .stroke(Color.accentGold.opacity(0.12), lineWidth: 1)
                     )
 
-                // Main waveform bars (gold)
+                // Main waveform bars (gold) — quiet stays similar, loud gets much higher peaks
                 HStack(spacing: spacing) {
                     ForEach(Array(displayLevels.enumerated()), id: \.offset) { _, level in
                         let raw = CGFloat(level)
-                        let height = minBarHeight + raw * (maxBarHeight - minBarHeight)
+                        let emphasized = Self.emphasizePeaks(raw)
+                        let height = minBarHeight + emphasized * (maxBarHeight - minBarHeight)
                         RoundedRectangle(cornerRadius: barWidth / 2)
                             .fill(
                                 LinearGradient(
@@ -421,7 +619,8 @@ struct RecordingWaveformView: View {
                 HStack(spacing: spacing) {
                     ForEach(Array(displayLevels.enumerated()), id: \.offset) { _, level in
                         let raw = CGFloat(level)
-                        let height = (minBarHeight + raw * (maxBarHeight - minBarHeight)) * 0.75
+                        let emphasized = Self.emphasizePeaks(raw)
+                        let height = (minBarHeight + emphasized * (maxBarHeight - minBarHeight)) * 0.75
                         RoundedRectangle(cornerRadius: barWidth / 2)
                             .fill(Color.accentGold.opacity(0.22))
                             .frame(width: max(1, barWidth * 0.6), height: max(2, height))
@@ -443,14 +642,18 @@ struct SaveToDrawerSheet: View {
     @ObservedObject private var onboarding = OnboardingManager.shared
     @Environment(\.dismiss) private var dismiss
 
-    /// Editable copy of the transcript; user can tap and edit before saving.
     @State private var editableTranscript: String = ""
     @FocusState private var isTranscriptFocused: Bool
     @State private var showDiscardConfirmation = false
+    @State private var customTitle: String = ""
+    @State private var previewStarred: Bool = false
+    @State private var previewReminderDate: Date? = nil
+    @State private var showReminderPicker: Bool = false
 
     private var isTutorialMode: Bool { tutorialManager.showSaveToDrawerForTutorial }
     private var isVoiceMode: Bool { vm.pendingVoiceFileName != nil }
     private var isTextMode: Bool { vm.pendingTextTitle != nil }
+    private var isDailyPromptMode: Bool { vm.dailyPromptCategory != nil }
 
     private var voicePreviewURL: URL? {
         guard let fileName = vm.pendingVoiceFileName else { return nil }
@@ -459,73 +662,161 @@ struct SaveToDrawerSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                // Cancel button (avoids toolbar ambiguity)
-                HStack {
-                    Button("Cancel") {
-                        if isTutorialMode {
-                            tutorialManager.showSaveToDrawerForTutorial = false
-                            tutorialManager.next()
-                            dismiss()
-                        } else {
-                            showDiscardConfirmation = true
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: 16) {
+                    // Cancel button (avoids toolbar ambiguity)
+                    HStack {
+                        Button("Cancel") {
+                            if isTutorialMode {
+                                tutorialManager.showSaveToDrawerForTutorial = false
+                                tutorialManager.next()
+                                dismiss()
+                            } else {
+                                showDiscardConfirmation = true
+                            }
                         }
-                    }
-                    .foregroundColor(.inkMuted)
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .alert(isVoiceMode ? "Discard recording?" : "Discard note?", isPresented: $showDiscardConfirmation) {
-                    Button("Keep", role: .cancel) {}
-                    Button("Discard", role: .destructive) {
-                        if isVoiceMode {
-                            vm.discardPendingVoice()
-                        } else {
-                            vm.cancelPendingText()
-                        }
-                        dismiss()
-                    }
-                } message: {
-                    Text(isVoiceMode
-                        ? "Are you sure you want to discard this voice recording? It cannot be recovered."
-                        : "Are you sure you want to discard this note? It cannot be recovered.")
-                }
-
-                // Voice preview: play and seek before choosing (skip in tutorial)
-                if !isTutorialMode, isVoiceMode, let url = voicePreviewURL {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Preview")
-                            .font(.cardCaption)
-                            .foregroundColor(.inkMuted)
-                        AudioPlayerView(
-                            audioService: vm.audioService,
-                            audioURL: url,
-                            totalDuration: vm.pendingVoiceDuration ?? 0
-                        )
+                        .foregroundColor(.inkMuted)
+                        Spacer()
                     }
                     .padding(.horizontal)
-                }
+                    .alert(isVoiceMode ? "Discard recording?" : "Discard note?", isPresented: $showDiscardConfirmation) {
+                        Button("Keep", role: .cancel) {}
+                        Button("Discard", role: .destructive) {
+                            if isVoiceMode {
+                                vm.discardPendingVoice()
+                            } else {
+                                vm.cancelPendingText()
+                            }
+                            dismiss()
+                        }
+                    } message: {
+                        Text(isVoiceMode
+                            ? "Are you sure you want to discard this voice recording? It cannot be recovered."
+                            : "Are you sure you want to discard this note? It cannot be recovered.")
+                    }
 
-                Text("Save to")
-                    .font(.cardCaption)
-                    .foregroundColor(.inkMuted)
-                HStack(spacing: 12) {
-                    drawerOption(key: "ideas", icon: "lightbulb", label: "Ideas")
-                    drawerOption(key: "work", icon: "briefcase", label: "Work")
-                    drawerOption(key: "journal", icon: "book", label: "Journal")
-                }
-                .padding(.horizontal)
+                    // Voice preview: play and seek before choosing (skip in tutorial)
+                    if !isTutorialMode, isVoiceMode, let url = voicePreviewURL {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Preview")
+                                .font(.cardCaption)
+                                .foregroundColor(.inkMuted)
+                            AudioPlayerView(
+                                audioService: vm.audioService,
+                                audioURL: url,
+                                totalDuration: vm.pendingVoiceDuration ?? 0
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
 
-                // Transcribed notes (voice mode only) — tap to edit, convert to bullets
-                if !isTutorialMode, isVoiceMode {
-                    transcribedNotesSection
-                }
+                    // Title, Star, Reminder — before save (voice mode only)
+                    if !isTutorialMode, isVoiceMode {
+                        HStack(spacing: 12) {
+                            TextField("Title (optional)", text: $customTitle)
+                                .font(.cardBody)
+                                .foregroundColor(.inkPrimary)
+                            Button {
+                                previewStarred.toggle()
+                            } label: {
+                                Image(systemName: previewStarred ? "star.fill" : "star")
+                                    .foregroundColor(previewStarred ? .accentGold : .inkMuted)
+                                    .font(.system(size: 20))
+                            }
+                            .buttonStyle(.plain)
+                            Button {
+                                showReminderPicker = true
+                            } label: {
+                                Image(systemName: previewReminderDate != nil ? "bell.fill" : "bell")
+                                    .foregroundColor(previewReminderDate != nil ? .accentGold : .inkMuted)
+                                    .font(.system(size: 20))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal)
+                        .sheet(isPresented: $showReminderPicker) {
+                            ReminderPickerSheet(
+                                currentReminder: previewReminderDate,
+                                onSave: { previewReminderDate = $0; showReminderPicker = false },
+                                onClear: { previewReminderDate = nil; showReminderPicker = false },
+                                onCancel: { showReminderPicker = false }
+                            )
+                        }
+                    }
 
-                Spacer()
+                    if isDailyPromptMode, let category = vm.dailyPromptCategory {
+                        Text("Saving to")
+                            .font(.cardCaption)
+                            .foregroundColor(.inkMuted)
+                        HStack(spacing: 8) {
+                            Image(systemName: category.icon)
+                                .font(.system(size: 18))
+                                .foregroundColor(.accentGold)
+                            Text(category.displayName)
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.inkPrimary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.cardSurface.opacity(0.8))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.accentGold.opacity(0.35), lineWidth: 1)
+                        )
+                        .padding(.horizontal)
+                        Button {
+                            vm.saveDailyPromptFromSheet(
+                                transcriptOverride: editableTranscript.isEmpty ? nil : editableTranscript,
+                                customTitle: customTitle.isEmpty ? nil : customTitle,
+                                reminderDate: previewReminderDate,
+                                starred: previewStarred
+                            )
+                            dismiss()
+                        } label: {
+                            Text("Save")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.accentGold)
+                                .cornerRadius(12)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                    } else {
+                        Text("Save to")
+                            .font(.cardCaption)
+                            .foregroundColor(.inkMuted)
+                        HStack(spacing: 12) {
+                            drawerOption(key: "ideas", icon: "lightbulb", label: "Ideas")
+                            drawerOption(key: "work", icon: "briefcase", label: "Work")
+                            drawerOption(key: "journal", icon: "book", label: "Journal")
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    // Transcribed notes (voice mode only) — set expectations, tap to edit
+                    if !isTutorialMode, isVoiceMode {
+                        transcribedNotesSection
+                    }
+
+                    Spacer(minLength: 24)
+                }
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
-            .padding(.top, 20)
             .background(Color.paperBackground)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .foregroundColor(.accentGold)
+                }
+            }
         }
         .interactiveDismissDisabled(!isTutorialMode)
         .onAppear {
@@ -538,12 +829,17 @@ struct SaveToDrawerSheet: View {
     }
 
     private var transcribedNotesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("Transcribed notes")
                 .font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundColor(.inkMuted)
                 .textCase(.uppercase)
                 .tracking(1.2)
+
+            // Short expectation line
+            Text("May not be perfect — tap to edit before saving.")
+                .font(.system(size: 12))
+                .foregroundColor(.inkMuted)
 
             if vm.isTranscribingPendingVoice {
                 HStack(spacing: 10) {
@@ -555,7 +851,7 @@ struct SaveToDrawerSheet: View {
                         .foregroundColor(.inkMuted)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 24)
+                .padding(.vertical, 16)
                 .padding(.horizontal, 16)
             } else if vm.pendingVoiceTranscript != nil {
                 TextEditor(text: $editableTranscript)
@@ -563,8 +859,8 @@ struct SaveToDrawerSheet: View {
                     .foregroundColor(.inkPrimary)
                     .scrollContentBackground(.hidden)
                     .focused($isTranscriptFocused)
-                    .frame(minHeight: 200, maxHeight: 420)
-                    .padding(12)
+                    .frame(minHeight: 120, maxHeight: 280)
+                    .padding(10)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.cardSurface)
@@ -578,17 +874,25 @@ struct SaveToDrawerSheet: View {
                                     )
                             )
                     )
+                Text("Tip: Speak clearly, less background noise = better results.")
+                    .font(.system(size: 11))
+                    .foregroundColor(.inkMuted.opacity(0.9))
             } else {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Image(systemName: "waveform.slash")
-                        .font(.system(size: 22))
+                        .font(.system(size: 20))
                         .foregroundColor(.inkMuted.opacity(0.4))
                     Text("Transcription unavailable")
-                        .font(Font.cardBody)
+                        .font(.system(size: 14))
                         .foregroundColor(.inkMuted)
+                    Text("Save the recording and add or edit text later.")
+                        .font(.system(size: 12))
+                        .foregroundColor(.inkMuted.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 28)
+                .padding(.vertical, 16)
             }
         }
         .padding(.horizontal)
@@ -605,7 +909,13 @@ struct SaveToDrawerSheet: View {
             } else {
                 onboarding.onFirstSave()
                 if isVoiceMode {
-                    vm.saveVoiceCardToDrawer(key, transcriptOverride: editableTranscript.isEmpty ? nil : editableTranscript)
+                    vm.saveVoiceCardToDrawer(
+                        key,
+                        transcriptOverride: editableTranscript.isEmpty ? nil : editableTranscript,
+                        customTitle: customTitle.isEmpty ? nil : customTitle,
+                        reminderDate: previewReminderDate,
+                        starred: previewStarred
+                    )
                 } else {
                     vm.saveTextCardToDrawer(key)
                 }

@@ -201,11 +201,17 @@ struct CardDetailScreen: View {
     // MARK: - Transcribed note (voice cards; below audio player)
     private var transcribedNoteSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Transcribed note")
-                .font(.cardCaption)
-                .foregroundColor(.inkMuted)
-                .textCase(.uppercase)
-                .tracking(1)
+            HStack {
+                Text("Transcribed note")
+                    .font(.cardCaption)
+                    .foregroundColor(.inkMuted)
+                    .textCase(.uppercase)
+                    .tracking(1)
+                Spacer()
+            }
+            Text("Auto-generated from your recording. Tap to edit anytime.")
+                .font(.system(size: 12))
+                .foregroundColor(.inkMuted.opacity(0.9))
 
             TextEditor(text: $vm.editingTypedCopy)
                 .font(.cardSnippet)

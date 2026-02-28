@@ -43,6 +43,11 @@ final class HomeCaptureViewModel: ObservableObject {
     @Published var todayCount = 0
     @Published var errorMessage: String?
     @Published var showMicPermissionAlert = false
+    
+    /// Daily prompt recording state
+    @Published var isRecordingDailyPrompt = false
+    @Published var dailyPromptCategory: DailyPromptCategory?
+    @Published var dailyPromptText: String?
 
     let audioService: AudioService
     let cardRepo: CardRepository
@@ -115,6 +120,16 @@ final class HomeCaptureViewModel: ObservableObject {
             currentRecordingId = nil
             pendingVoiceFileName = fileName
             pendingVoiceDuration = dur
+            
+            // If this was a daily prompt recording, show the same preview sheet (transcript, title, star, reminder)
+            if isRecordingDailyPrompt, dailyPromptCategory != nil {
+                isRecordingDailyPrompt = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    self.showSaveToDrawerSheet = true
+                }
+                return
+            }
+            
             // Small settle time before showing the drawer sheet so the audio session
             // can fully deactivate — this also helps the 2nd recording start cleanly.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -123,12 +138,22 @@ final class HomeCaptureViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
             isRecording = false
+            isRecordingDailyPrompt = false
+            dailyPromptCategory = nil
+            dailyPromptText = nil
         }
     }
-
+    
+    /// Start recording for a daily prompt
+    func beginDailyPromptRecording(category: DailyPromptCategory, promptText: String) {
+        isRecordingDailyPrompt = true
+        dailyPromptCategory = category
+        dailyPromptText = promptText
+        beginRecording()
+    }
+    
     /// Call when user picks a drawer from the "Save to" sheet after recording. Saves voice note to that drawer and runs fly-to animation.
-    /// - Parameter transcriptOverride: If provided (e.g. user edited in the sheet), use this instead of pendingVoiceTranscript.
-    func saveVoiceCardToDrawer(_ drawerKey: String, transcriptOverride: String? = nil) {
+    func saveVoiceCardToDrawer(_ drawerKey: String, transcriptOverride: String? = nil, customTitle: String? = nil, reminderDate: Date? = nil, starred: Bool = false) {
         guard let fileName = pendingVoiceFileName, let duration = pendingVoiceDuration,
               let drawer = drawerRepo.fetchDrawer(bySystemKey: drawerKey) else {
             showSaveToDrawerSheet = false
@@ -140,7 +165,10 @@ final class HomeCaptureViewModel: ObservableObject {
         let transcript = transcriptOverride ?? pendingVoiceTranscript
         let title: String
         let snippet: String
-        if let t = transcript, !t.isEmpty {
+        if let custom = customTitle, !custom.trimmingCharacters(in: .whitespaces).isEmpty {
+            title = custom.trimmingCharacters(in: .whitespaces)
+            snippet = transcript.map { String($0.prefix(200)) } ?? "Voice note"
+        } else if let t = transcript, !t.isEmpty {
             let hint = CardTypeHint.from(systemKey: drawer.systemKey ?? drawerKey)
             title = NLTitleGenerator.generateTitle(
                 transcript: t,
@@ -156,6 +184,8 @@ final class HomeCaptureViewModel: ObservableObject {
         if let t = transcript, !t.isEmpty {
             cardRepo.update(card: card, typedCopy: t)
         }
+        if starred { cardRepo.toggleStar(card) }
+        if let rem = reminderDate { cardRepo.setReminder(card, date: rem) }
         pendingVoiceFileName = nil
         pendingVoiceDuration = nil
         pendingVoiceTranscript = nil
@@ -184,8 +214,11 @@ final class HomeCaptureViewModel: ObservableObject {
 
     /// Discard the pending recording (delete file, no card) and play "fly into bin" animation.
     func discardPendingVoice() {
+        audioService.stopPlayback()
         guard let fileName = pendingVoiceFileName else {
             showSaveToDrawerSheet = false
+            dailyPromptCategory = nil
+            dailyPromptText = nil
             return
         }
         let fileURL = AudioDirectoryHelper.audioDirectory.appendingPathComponent(fileName)
@@ -194,9 +227,77 @@ final class HomeCaptureViewModel: ObservableObject {
         pendingVoiceDuration = nil
         pendingVoiceTranscript = nil
         showSaveToDrawerSheet = false
+        dailyPromptCategory = nil
+        dailyPromptText = nil
         animationTargetIsBin = true
         animationTargetTab = 2  // center (bin is middle bottom)
         triggerPrintAnimation()
+    }
+    
+    /// Save daily prompt recording from the preview sheet (with optional transcript/title/star/reminder).
+    func saveDailyPromptFromSheet(transcriptOverride: String? = nil, customTitle: String? = nil, reminderDate: Date? = nil, starred: Bool = false) {
+        guard let category = dailyPromptCategory,
+              let fileName = pendingVoiceFileName,
+              let duration = pendingVoiceDuration,
+              let drawer = drawerRepo.fetchDrawer(bySystemKey: category.drawerKey) else {
+            showSaveToDrawerSheet = false
+            pendingVoiceFileName = nil
+            pendingVoiceDuration = nil
+            pendingVoiceTranscript = nil
+            dailyPromptCategory = nil
+            dailyPromptText = nil
+            return
+        }
+        let transcript = transcriptOverride ?? pendingVoiceTranscript
+        let title: String
+        let snippet: String
+        if let custom = customTitle, !custom.trimmingCharacters(in: .whitespaces).isEmpty {
+            title = custom.trimmingCharacters(in: .whitespaces)
+            snippet = transcript.map { String($0.prefix(200)) } ?? "Voice note"
+        } else if let t = transcript, !t.isEmpty {
+            let hint = CardTypeHint.from(systemKey: category.rawValue)
+            title = NLTitleGenerator.generateTitle(transcript: t, cardTypeHint: hint, fallbackDate: Date())
+            snippet = String(t.prefix(200))
+        } else {
+            title = "Daily Prompt"
+            snippet = dailyPromptText ?? "Voice note"
+        }
+        let card = cardRepo.createVoiceCard(
+            drawer: drawer,
+            audioFileName: fileName,
+            duration: duration,
+            title: title,
+            snippet: snippet,
+            tags: "daily-prompt"
+        )
+        if let t = transcript, !t.isEmpty {
+            cardRepo.update(card: card, typedCopy: t)
+        }
+        if starred { cardRepo.toggleStar(card) }
+        if let rem = reminderDate { cardRepo.setReminder(card, date: rem) }
+        pendingVoiceFileName = nil
+        pendingVoiceDuration = nil
+        pendingVoiceTranscript = nil
+        showSaveToDrawerSheet = false
+        dailyPromptCategory = nil
+        dailyPromptText = nil
+        refreshCounts()
+        animationTargetIsBin = false
+        switch category.drawerKey {
+        case "ideas": animationTargetTab = 0
+        case "work": animationTargetTab = 1
+        case "journal": animationTargetTab = 3
+        default: animationTargetTab = 0
+        }
+        triggerPrintAnimation()
+        NotificationCenter.default.post(name: .vaultedRefreshTabCounts, object: nil)
+        if let cardId = card.uuid {
+            DailyPromptService.shared.setLastSavedCard(id: cardId, drawerKey: category.drawerKey)
+        }
+        DailyPromptService.shared.markPromptAnswered()
+        if transcript == nil || transcript?.isEmpty == true {
+            Task { await transcribeAndUpdateSnippet(fileName: fileName, drawerKey: category.drawerKey) }
+        }
     }
 
     func cancelRecording() {

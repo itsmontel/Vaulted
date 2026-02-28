@@ -43,6 +43,7 @@
 		VA0101A10000000000000024 /* TranscriptBulletizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000026 /* TranscriptBulletizer.swift */; };
 		VA0101A10000000000000025 /* BulletizerComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000027 /* BulletizerComponents.swift */; };
 		VA0101A10000000000000029 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000029 /* ReminderService.swift */; };
+		VA0101A10000000000000030 /* DailyPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = VA0101B10000000000000030 /* DailyPromptService.swift */; };
 		VA0101A20000000000000001 /* Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = VA0101B20000000000000001 /* Speech.framework */; };
 /* End PBXBuildFile section */
 
@@ -87,6 +88,7 @@
 		VA0101B10000000000000026 /* TranscriptBulletizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptBulletizer.swift; sourceTree = "<group>"; };
 		VA0101B10000000000000027 /* BulletizerComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulletizerComponents.swift; sourceTree = "<group>"; };
 		VA0101B10000000000000029 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
+		VA0101B10000000000000030 /* DailyPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyPromptService.swift; sourceTree = "<group>"; };
 		VA0101B20000000000000001 /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -161,11 +163,20 @@
 				VA0101D1000000000000000C /* Audio */,
 				VA0101D1000000000000000F /* Speech */,
 				VA0101D10000000000000020 /* Text */,
+				VA0101D10000000000000030 /* DailyPrompt */,
 				VA0101B10000000000000029 /* ReminderService.swift */,
 				VA0101D10000000000000021 /* Subscription */,
 				VA0101D10000000000000022 /* Onboarding */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		VA0101D10000000000000030 /* DailyPrompt */ = {
+			isa = PBXGroup;
+			children = (
+				VA0101B10000000000000030 /* DailyPromptService.swift */,
+			);
+			path = DailyPrompt;
 			sourceTree = "<group>";
 		};
 		VA0101D10000000000000006 /* Repositories */ = {
@@ -397,6 +408,7 @@
 				VA0101A10000000000000024 /* TranscriptBulletizer.swift in Sources */,
 				VA0101A10000000000000025 /* BulletizerComponents.swift in Sources */,
 				VA0101A10000000000000029 /* ReminderService.swift in Sources */,
+				VA0101A10000000000000030 /* DailyPromptService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,6 +8,7 @@ struct TextComposerSheet: View {
     @State private var bodyText = ""
     @Environment(\.dismiss) private var dismiss
     @FocusState private var bodyFocused: Bool
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
         NavigationStack {
@@ -15,14 +16,26 @@ struct TextComposerSheet: View {
                 Color.paperBackground.ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 16) {
-                    // Title field
-                    TextField("Title (optional)", text: $title)
-                        .font(.drawerLabel)
-                        .foregroundColor(.inkPrimary)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 12)
+                    // Title field with theme-aware placeholder
+                    ZStack(alignment: .leading) {
+                        if title.isEmpty {
+                            Text("Title (optional)")
+                                .font(.drawerLabel)
+                                .foregroundColor(.placeholderColor)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 12)
+                        }
+                        TextField("", text: $title)
+                            .font(.drawerLabel)
+                            .foregroundColor(.inkPrimary)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                    }
+                    .frame(minHeight: 44)
 
-                    Divider().padding(.horizontal, 16)
+                    Divider()
+                        .background(Color.borderMuted)
+                        .padding(.horizontal, 16)
 
                     // Body field
                     TextEditor(text: $bodyText)
@@ -32,13 +45,20 @@ struct TextComposerSheet: View {
                         .background(Color.clear)
                         .focused($bodyFocused)
                         .padding(.horizontal, 12)
-
-                    Spacer()
                 }
             }
             .navigationTitle("New Note")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(themeManager.theme.paperBackground, for: .navigationBar)
+            .toolbarColorScheme(themeManager.theme.isDark ? .dark : .light, for: .navigationBar)
             .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .foregroundColor(.accentGold)
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundColor(.inkMuted)
@@ -53,6 +73,7 @@ struct TextComposerSheet: View {
                     .foregroundColor(.accentGold)
                 }
             }
+            .tint(.accentGold)
             .onAppear { bodyFocused = true }
         }
     }

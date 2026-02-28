@@ -62,6 +62,14 @@ final class CardRepository {
         return card
     }
 
+    // MARK: - Fetch card by UUID
+    func fetchCard(byUUID uuid: UUID) -> CardEntity? {
+        let req: NSFetchRequest<CardEntity> = CardEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "uuid == %@", uuid as CVarArg)
+        req.fetchLimit = 1
+        return (try? context.fetch(req))?.first
+    }
+
     // MARK: - Fetch cards for a drawer
     func fetchCards(drawer: DrawerEntity,
                     searchQuery: String = "",

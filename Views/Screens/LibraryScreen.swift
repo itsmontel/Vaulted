@@ -87,6 +87,20 @@ private struct LibraryScreenContent: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             vm.load()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .vaultedOpenCard)) { notification in
+            guard let userInfo = notification.userInfo,
+                  let drawerKey = userInfo["drawerKey"] as? String,
+                  let cardId = userInfo["cardId"] as? UUID,
+                  drawerKey == self.drawerKey else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { vm.viewMode = .stack }
+            vm.load()
+            let card = CardRepository().fetchCard(byUUID: cardId)
+            if let card = card {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    selectedCard = card
+                }
+            }
+        }
     }
 
     /// Sets the real view mode on the VM so the user sees Stack / Shelf / Drawers
@@ -161,16 +175,23 @@ private struct LibraryScreenContent: View {
             // Search bar
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.inkMuted)
+                    .foregroundColor(.placeholderColor)
                     .font(.system(size: 16))
-                TextField("Search notes...", text: $searchText)
-                    .font(.cardSnippet)
-                    .foregroundColor(.inkPrimary)
-                    .textFieldStyle(.plain)
-                    .onChange(of: searchText) { q in
-                        vm.searchQuery = q
-                        vm.reloadCards()
+                ZStack(alignment: .leading) {
+                    if searchText.isEmpty {
+                        Text("Search notes...")
+                            .font(.cardSnippet)
+                            .foregroundColor(.placeholderColor)
                     }
+                    TextField("", text: $searchText)
+                        .font(.cardSnippet)
+                        .foregroundColor(.inkPrimary)
+                        .textFieldStyle(.plain)
+                        .onChange(of: searchText) { q in
+                            vm.searchQuery = q
+                            vm.reloadCards()
+                        }
+                }
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""

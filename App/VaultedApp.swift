@@ -38,6 +38,7 @@ struct VaultedApp: App {
 // Tab order: 0 Ideas, 1 Work, 2 Capture, 3 Journal, 4 Settings
 extension Notification.Name {
     static let vaultedRefreshTabCounts = Notification.Name("Vaulted.RefreshTabCounts")
+    static let vaultedOpenCard = Notification.Name("Vaulted.OpenCard")
 }
 
 // MARK: - Onboarding Overlay (Welcome → Paywall → Privacy)
@@ -84,6 +85,8 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
+            // Fill entire window including bottom safe area so no white strip shows
+            themeManager.theme.paperBackground.ignoresSafeArea()
             // Content views
             Group {
                 if selectedTab == 0 {
@@ -111,16 +114,21 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 80)  // Space for custom tab bar
 
-            // Custom tab bar overlay
+            // Custom tab bar overlay — positioned higher
             VStack {
                 Spacer()
                 customTabBar
+                    .padding(.bottom, 2)
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .onAppear {
             UITabBar.appearance().isHidden = true
             refreshTabCounts()
+            applyNavigationBarAppearance()
+        }
+        .onChange(of: themeManager.current) { _ in
+            applyNavigationBarAppearance()
         }
         .onReceive(NotificationCenter.default.publisher(for: .vaultedRefreshTabCounts)) { _ in
             let before = (ideasCount, workCount, journalCount)
@@ -130,6 +138,30 @@ struct ContentView: View {
             else if journalCount > before.2 { badgeAnimationTab = 3 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { badgeAnimationTab = nil }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .vaultedOpenCard)) { notification in
+            guard let userInfo = notification.userInfo,
+                  let drawerKey = userInfo["drawerKey"] as? String else { return }
+            let tab: Int
+            switch drawerKey {
+            case "ideas": tab = 0
+            case "work": tab = 1
+            case "journal": tab = 3
+            default: tab = 0
+            }
+            selectedTab = tab
+        }
+    }
+
+    private func applyNavigationBarAppearance() {
+        let t = themeManager.theme
+        let navBar = UINavigationBar.appearance()
+        navBar.standardAppearance.configureWithOpaqueBackground()
+        navBar.standardAppearance.backgroundColor = UIColor(t.paperBackground)
+        navBar.standardAppearance.titleTextAttributes = [.foregroundColor: UIColor(t.inkPrimary)]
+        navBar.standardAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor(t.inkPrimary)]
+        navBar.compactAppearance = navBar.standardAppearance
+        navBar.scrollEdgeAppearance = navBar.standardAppearance
+        navBar.tintColor = UIColor(t.accentGold)
     }
 
     private func refreshTabCounts() {

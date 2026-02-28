@@ -6,6 +6,7 @@ struct GlobalSearchScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var moc
     @StateObject private var vm = GlobalSearchViewModel()
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var selectedCard: CardEntity?
 
     var body: some View {
@@ -31,12 +32,18 @@ struct GlobalSearchScreen: View {
                     }
                 }
             }
-            .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(themeManager.theme.paperBackground, for: .navigationBar)
+            .toolbarColorScheme(themeManager.theme.isDark ? .dark : .light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                         .foregroundColor(.accentGold)
+                }
+                ToolbarItem(placement: .principal) {
+                    Text("Search")
+                        .font(.headline)
+                        .foregroundColor(.inkPrimary)
                 }
             }
             .sheet(item: $selectedCard) { card in
@@ -54,16 +61,23 @@ struct GlobalSearchScreen: View {
     private var searchBar: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.inkMuted)
+                .foregroundColor(.placeholderColor)
                 .font(.system(size: 18))
-            TextField("Search all notes...", text: $vm.searchQuery)
-                .font(.cardSnippet)
-                .foregroundColor(.inkPrimary)
-                .textFieldStyle(.plain)
-                .autocorrectionDisabled()
-                .onChange(of: vm.searchQuery) { _ in
-                    vm.performSearch()
+            ZStack(alignment: .leading) {
+                if vm.searchQuery.isEmpty {
+                    Text("Search all notes...")
+                        .font(.cardSnippet)
+                        .foregroundColor(.placeholderColor)
                 }
+                TextField("", text: $vm.searchQuery)
+                    .font(.cardSnippet)
+                    .foregroundColor(.inkPrimary)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+                    .onChange(of: vm.searchQuery) { _ in
+                        vm.performSearch()
+                    }
+            }
             if !vm.searchQuery.isEmpty {
                 Button {
                     vm.searchQuery = ""
@@ -89,13 +103,13 @@ struct GlobalSearchScreen: View {
         VStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 48))
-                .foregroundColor(.inkMuted.opacity(0.4))
+                .foregroundColor(.inkMuted.opacity(0.5))
             Text("Search your notes")
                 .font(.drawerLabel)
                 .foregroundColor(.inkMuted)
             Text("Search by title, content, tags, or transcribed text")
                 .font(.cardSnippet)
-                .foregroundColor(.inkMuted.opacity(0.7))
+                .foregroundColor(.inkMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
@@ -113,7 +127,7 @@ struct GlobalSearchScreen: View {
                 .foregroundColor(.inkMuted)
             Text("Try different keywords")
                 .font(.cardSnippet)
-                .foregroundColor(.inkMuted.opacity(0.7))
+                .foregroundColor(.inkMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 100)
